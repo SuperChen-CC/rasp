@@ -28,6 +28,16 @@ public class RASPAppProperties extends RASPProperties {
 	private boolean silent;
 
 	/**
+	 * RASP模块检测熔断时间（毫秒）, <=0 表示不限制
+	 */
+	private int raspProcessTimeout;
+
+	/**
+	 * 防御模块状态：开启/关闭检测，如果配置为false则会关闭所有防御模块检测
+	 */
+	private boolean moduleDefense;
+
+	/**
 	 * IP黑名单列表
 	 */
 	private String[] ipBlacklist;
@@ -74,7 +84,9 @@ public class RASPAppProperties extends RASPProperties {
 			this.openModules[i] = modules[i].hashCode();
 		}
 
+		this.moduleDefense = configMap.getBoolean(MODULE_DEFENSE, true);
 		this.silent = configMap.getBoolean(SILENT, false);
+		this.raspProcessTimeout = configMap.getInt(RASP_PROCESS_TIMEOUT, 0);
 		this.ipBlacklist = configMap.getArray(IP_BLACKLIST);
 		this.urlBlacklist = configMap.getArray(URL_BLACKLIST);
 		this.headerWhitelist = configMap.getArray(HEADER_WHITELIST);
@@ -110,7 +122,7 @@ public class RASPAppProperties extends RASPProperties {
 		}
 
 		this.servletStreamHook = configMap.getBoolean(SERVLET_STREAM_HOOK, false);
-		this.servletStreamMaxCacheSize = configMap.getInt(SERVLET_STREAM_MAX_CACHE_SIZE);
+		this.servletStreamMaxCacheSize = configMap.getInt(SERVLET_STREAM_MAX_CACHE_SIZE, 1);
 	}
 
 	public String getAppID() {
@@ -121,8 +133,16 @@ public class RASPAppProperties extends RASPProperties {
 		return openModules;
 	}
 
+	public boolean isModuleDefense() {
+		return moduleDefense;
+	}
+
 	public boolean isSilent() {
 		return silent;
+	}
+
+	public int getRaspProcessTimeout() {
+		return raspProcessTimeout;
 	}
 
 	public String[] getIpBlacklist() {

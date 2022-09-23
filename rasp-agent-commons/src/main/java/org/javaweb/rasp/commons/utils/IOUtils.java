@@ -27,6 +27,8 @@ public class IOUtils {
 			output.write(buffer, 0, n);
 		}
 
+		output.flush();
+
 		return count;
 	}
 

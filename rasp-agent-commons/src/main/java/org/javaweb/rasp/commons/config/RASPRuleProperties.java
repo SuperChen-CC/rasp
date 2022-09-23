@@ -52,8 +52,6 @@ public class RASPRuleProperties extends RASPProperties {
 
 	private String[] disableMethodClasses;
 
-	private boolean reflectionDisabledNativeMethod;
-
 	private final List<Integer> reflectionDisabledMethods = new ArrayList<Integer>();
 
 	public void reloadConfig(RASPConfigMap<String, Object> configMap) {
@@ -81,7 +79,6 @@ public class RASPRuleProperties extends RASPProperties {
 		this.disableNewJsp = configMap.getBoolean(DISABLE_NEW_JSP, false);
 		this.dataBinderDisableFieldRegexp = configMap.getString(DATA_BINDER_DISABLE_FIELD_REGEXP);
 		this.disableMethodClasses = configMap.getArray(DISABLE_METHOD_CLASSES);
-		this.reflectionDisabledNativeMethod = configMap.getBoolean(REFLECTION_DISABLED_NATIVE_METHOD, true);
 
 		initReflectionDisabledNativeMethod(configMap);
 	}
@@ -96,7 +93,7 @@ public class RASPRuleProperties extends RASPProperties {
 			String   methodName = strs.length == 2 ? strs[1].trim() : null;
 
 			// 计算类方法hash
-			reflectionDisabledMethods.add(getMethodHashcode(className, methodName));
+			reflectionDisabledMethods.add(getMethodHashcode(className, methodName).hashCode());
 		}
 	}
 
@@ -186,10 +183,6 @@ public class RASPRuleProperties extends RASPProperties {
 
 	public String[] getDisableMethodClasses() {
 		return disableMethodClasses;
-	}
-
-	public boolean isReflectionDisabledNativeMethod() {
-		return reflectionDisabledNativeMethod;
 	}
 
 	public List<Integer> getReflectionDisabledMethods() {

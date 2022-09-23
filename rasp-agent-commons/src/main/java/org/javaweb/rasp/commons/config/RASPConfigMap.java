@@ -7,10 +7,6 @@ import static org.javaweb.rasp.commons.utils.StringUtils.*;
 
 public class RASPConfigMap<K, V> extends HashMap<K, V> {
 
-	public int getInt(K key) {
-		return getInteger(key, null);
-	}
-
 	public int getInt(K key, int defaultValue) {
 		return getInteger(key, defaultValue);
 	}
@@ -19,7 +15,7 @@ public class RASPConfigMap<K, V> extends HashMap<K, V> {
 		String value = getString(key);
 
 		if (isNotEmpty(value)) {
-			return Integer.parseInt(value);
+			return Double.valueOf(value).intValue();
 		} else if (defaultValue != null) {
 			return defaultValue;
 		}
@@ -27,15 +23,11 @@ public class RASPConfigMap<K, V> extends HashMap<K, V> {
 		throw new RuntimeException(AGENT_NAME + "读取配置属性：" + key + "不存在！");
 	}
 
-	public long getLong(K key) {
-		return getLong(key, null);
-	}
-
 	public Long getLong(K key, Long defaultValue) {
 		String value = getString(key);
 
 		if (isNotEmpty(value)) {
-			return Long.parseLong(value);
+			return Double.valueOf(value).longValue();
 		} else if (defaultValue != null) {
 			return defaultValue;
 		}

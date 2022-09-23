@@ -31,11 +31,22 @@ public class RASPOutputStreamCache extends OutputStream {
 	RASPHttpRequestContext context;
 
 	/**
-	 * 非API请求默认最大值不能超过100M
+	 * 非API请求默认最大值不能超过10M
 	 */
-	private static final int DEFAULT_MAX_SIZE = 100 * 1024 * 1024;
+	private static final int DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
 	private final RASPByteArrayOutputStream cachedStream = new RASPByteArrayOutputStream();
+
+	public RASPOutputStreamCache(RASPHttpRequestContext context) {
+		this.serialization = null;
+		int maxCacheSize = context.getMaxStreamCacheSize();
+
+		if (maxCacheSize > 0 && maxCacheSize < DEFAULT_MAX_SIZE) {
+			this.maxCacheSize = maxCacheSize * 1024 * 1024;
+		} else {
+			this.maxCacheSize = DEFAULT_MAX_SIZE;
+		}
+	}
 
 	/**
 	 * 创建RASP输出流缓存对象
@@ -54,9 +65,9 @@ public class RASPOutputStreamCache extends OutputStream {
 		} else {
 			this.serialization = null;
 
-			// 非API请求必须限制缓存流字节数，缓存字节数最大值那么必须大于0，小于100M
+			// 非API请求必须限制缓存流字节数，缓存字节数最大值那么必须大于0，小于10M
 			if (contentLength == -1 || contentLength > DEFAULT_MAX_SIZE) {
-				this.maxCacheSize = maxCacheSize;
+				this.maxCacheSize = maxCacheSize * 1024 * 1024;
 				return;
 			}
 		}

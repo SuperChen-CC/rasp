@@ -61,38 +61,43 @@ public final class ReflectionUtils {
 		return sb.append(')').toString();
 	}
 
-	public static int getMethodHashcode(Object className, String method) {
-		int hashcode = 0;
+	public static String getMethodHashcode(Object className, String method) {
+		StringBuilder sb = new StringBuilder();
 
 		if (className != null) {
-			hashcode = className.hashCode();
+			sb.append(className);
 		}
 
 		if (method != null) {
-			hashcode += method.hashCode();
+			if (sb.length() > 0) {
+				sb.append("#");
+			}
+
+			sb.append(method);
 		}
 
-		return hashcode;
+		return sb.toString();
 	}
 
 	public static int getMethodHashcode(Object className, String method, Class<?>... typeClasses) {
-		int hashcode = getMethodHashcode(className, method);
+		StringBuilder sb = new StringBuilder();
+		sb.append(getMethodHashcode(className, method));
 
-		for (Class<?> clazz : typeClasses) {
-			hashcode += clazz.getName().hashCode();
+		if (typeClasses.length > 0) {
+			sb.append("(");
+
+			for (int i = 0; i < typeClasses.length; i++) {
+				if (i > 0) {
+					sb.append(',');
+				}
+
+				sb.append(typeClasses[i].getName());
+			}
+
+			sb.append(")");
 		}
 
-		return hashcode;
-	}
-
-	public static int getMethodHashcode(Object className, String method, String... typeClasses) {
-		int hashcode = getMethodHashcode(className, method);
-
-		for (String classname : typeClasses) {
-			hashcode += classname.hashCode();
-		}
-
-		return hashcode;
+		return sb.hashCode();
 	}
 
 	public static int getFieldHashcode(Object className, String field) {

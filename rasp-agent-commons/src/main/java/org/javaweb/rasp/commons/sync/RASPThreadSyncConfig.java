@@ -1,5 +1,8 @@
 package org.javaweb.rasp.commons.sync;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class RASPThreadSyncConfig {
 
 	/**
@@ -34,5 +37,24 @@ public abstract class RASPThreadSyncConfig {
 	}
 
 	public abstract void dataSynchronization();
+
+	private final Map<Object, Object> callback = new HashMap<Object, Object>() {
+		@Override
+		public Object get(Object key) {
+			if ("isRunning".equals(key)) {
+				return isRunning();
+			} else if ("getSyncInterval".equals(key)) {
+				return getSyncInterval();
+			} else if ("dataSynchronization".equals(key)) {
+				dataSynchronization();
+			}
+
+			return null;
+		}
+	};
+
+	public Map<Object, Object> getCallback() {
+		return callback;
+	}
 
 }

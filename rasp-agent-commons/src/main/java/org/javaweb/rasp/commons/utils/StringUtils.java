@@ -343,7 +343,7 @@ public class StringUtils {
 		return new String(chars);
 	}
 
-	public static String join(final String[] array, final char separator) {
+	public static String join(final Object[] array, final char separator) {
 		return org.apache.commons.lang3.StringUtils.join(array, separator);
 	}
 
@@ -508,6 +508,32 @@ public class StringUtils {
 		if (str == null) return null;
 
 		return chr + str.substring(1);
+	}
+
+	public static String checkMaxLength(String value, int maxLength) {
+		if (value != null && value.length() > maxLength) {
+			return value.substring(0, maxLength);
+		}
+
+		return value;
+	}
+
+	public static String[] checkMaxLength(String[] values, int maxLength) {
+		int len = 0;
+
+		if (values == null) return null;
+
+		for (String value : values) {
+			if (value == null) {
+				continue;
+			}
+
+			len += value.length();
+
+			if (len > maxLength) return new String[]{value.substring(0, maxLength)};
+		}
+
+		return values;
 	}
 
 }

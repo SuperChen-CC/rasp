@@ -1,14 +1,13 @@
 package org.javaweb.rasp.commons.constants;
 
 import java.rasp.proxy.loader.HookResult;
-
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static java.rasp.proxy.loader.HookResultType.RETURN;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.DOTALL;
-import static java.rasp.proxy.loader.HookResultType.RETURN;
 import static org.javaweb.rasp.loader.AgentConstants.AGENT_FILE_PREFIX_NAME;
 
 /**
@@ -52,9 +51,19 @@ public class RASPConstants {
 	public static final String[] SYNC_LOG_TYPES = new String[]{ACCESS_LOG, ATTACK_LOG, TRACE_LOG};
 
 	/**
-	 * 定义RASP 请求适配jar名称
+	 * RASP 请求适配jar名称
 	 */
 	public static final String ADAPTER_FILE_NAME = AGENT_FILE_PREFIX_NAME + "-servlet.jar";
+
+	/**
+	 * RASP agent文件名称
+	 */
+	public static final String AGENT_FILE_NAME = AGENT_FILE_PREFIX_NAME + "-agent.jar";
+
+	/**
+	 * RASP loader文件名称
+	 */
+	public static final String LOADER_FILE_NAME = AGENT_FILE_PREFIX_NAME + "-loader.jar";
 
 	/**
 	 * RASP Runtime日志文件名

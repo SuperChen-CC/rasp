@@ -1,9 +1,15 @@
 package org.javaweb.rasp.commons.utils;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
+
+import static org.javaweb.rasp.commons.utils.IOUtils.closeQuietly;
 
 /**
  * Created by yz on 2016-05-27.
@@ -164,21 +170,38 @@ public class ClassUtils {
 	}
 
 	/**
-	 * 读取指定类加载器中的Properties文件
+	 * 读取指定jar中的Properties文件
 	 *
-	 * @param classLoader 目标类加载器
-	 * @param res         Properties文件路径
-	 * @return Properties Map
+	 * @param jarFile jar
+	 * @param res     资源路径
+	 * @return Map
 	 */
-	public static Map<String, String> getPropertiesMap(ClassLoader classLoader, String res) {
+	public static Map<String, String> getPropertiesMap(File jarFile, String res) {
+		FileInputStream fis = null;
+		JarInputStream  zis = null;
+
 		try {
 			Properties p = new Properties();
-			p.load(classLoader.getResourceAsStream(res));
+			fis = new FileInputStream(jarFile);
+			zis = new JarInputStream(fis);
 
-			return propertiesToMap(p);
-		} catch (IOException e) {
-			return null;
+			JarEntry entry;
+
+			while ((entry = zis.getNextJarEntry()) != null) {
+				String name = entry.getName();
+
+				if (name.equals(res)) {
+					p.load(zis);
+					return propertiesToMap(p);
+				}
+			}
+		} catch (IOException ignored) {
+		} finally {
+			closeQuietly(zis);
+			closeQuietly(fis);
 		}
+
+		return null;
 	}
 
 }

@@ -1,19 +1,22 @@
 package org.javaweb.rasp.commons.config;
 
 import ch.qos.logback.classic.Level;
+import org.javaweb.rasp.commons.RASPVersion;
 import org.javaweb.rasp.commons.context.RASPHttpRequestContext;
 import org.slf4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.lang.System.currentTimeMillis;
 import static org.javaweb.rasp.commons.constants.RASPConstants.*;
 import static org.javaweb.rasp.commons.log.RASPLogger.createRASPLogger;
-import static org.javaweb.rasp.commons.utils.StringUtils.*;
-import static org.javaweb.rasp.loader.AgentConstants.*;
+import static org.javaweb.rasp.commons.utils.ClassUtils.getPropertiesMap;
 import static org.javaweb.rasp.commons.utils.FileUtils.copyFile;
+import static org.javaweb.rasp.commons.utils.StringUtils.countOf;
+import static org.javaweb.rasp.commons.utils.StringUtils.replaceFirstChar;
+import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 
 /**
  * RASP 配置
@@ -26,8 +29,17 @@ public class RASPConfiguration {
 			RASPConfiguration.class.getProtectionDomain().getCodeSource().getLocation().getFile()
 	).getParentFile();
 
+	// RASP loader文件
+	public static final File RASP_LOADER_FILE = new File(RASP_DIRECTORY, LOADER_FILE_NAME);
+
+	// RASP agent文件
+	public static final File RASP_AGENT_FILE = new File(RASP_DIRECTORY, AGENT_FILE_NAME);
+
 	// RASP 适配文件
 	public static final File RASP_ADAPTER_FILE = new File(RASP_DIRECTORY, ADAPTER_FILE_NAME);
+
+	// RASP 版本目录
+	public static final File RASP_VERSION_DIRECTORY = getDirectory(new File(RASP_DIRECTORY, "version"));
 
 	// RASP 配置目录
 	public static final File RASP_CONFIG_DIRECTORY = getDirectory(new File(RASP_DIRECTORY, "config"));
@@ -45,10 +57,10 @@ public class RASPConfiguration {
 	public static final File RASP_DATABASE_DIRECTORY = getDirectory(new File(RASP_DIRECTORY, "database"));
 
 	// RASP Agent日志文件
-	public static final File RASP_AGENT_FILE = new File(RASP_DATABASE_DIRECTORY, AGENT_LOG_FILE_NAME);
+	public static final File RASP_AGENT_LOG_FILE = new File(RASP_DATABASE_DIRECTORY, AGENT_LOG_FILE_NAME);
 
 	// RASP 防御模块日志文件
-	public static final File RASP_MODULES_FILE = new File(RASP_DATABASE_DIRECTORY, MODULES_LOG_FILE_NAME);
+	public static final File RASP_MODULES_LOG_FILE = new File(RASP_DATABASE_DIRECTORY, MODULES_LOG_FILE_NAME);
 
 	// RASP 403.html
 	public static final File RASP_FORBIDDEN_FILE = new File(RASP_DIRECTORY, FORBIDDEN_FILE);
@@ -62,6 +74,11 @@ public class RASPConfiguration {
 	 * rasp.properties配置文件内容
 	 */
 	public static final RASPAgentProperties AGENT_PROPERTIES;
+
+	/**
+	 * RASP版本
+	 */
+	public static final RASPVersion RASP_VERSION;
 
 	/**
 	 * RASP站点管理员配置,rasp-rules.properties文件配置内容
@@ -94,12 +111,17 @@ public class RASPConfiguration {
 	private static final Map<Integer, RASPPropertiesConfiguration<RASPAppProperties>> APPLICATION_CONFIG_MAP =
 			new ConcurrentHashMap<Integer, RASPPropertiesConfiguration<RASPAppProperties>>();
 
+	public static final long RASP_START_TIME = currentTimeMillis();
+
 	static {
 		// 初始化加载RASP核心配置文件
 		AGENT_CONFIG = loadConfig(AGENT_CONFIG_FILE_NAME, RASPAgentProperties.class);
 
 		// 解析rasp.properties配置文件内容
 		AGENT_PROPERTIES = AGENT_CONFIG.getRaspProperties();
+
+		// 初始化RASP版本信息
+		RASP_VERSION = loadRASPVersion();
 
 		// 初始化加载RASP规则配置文件
 		AGENT_RULES_CONFIG = loadConfig(AGENT_RULES_FILE_NAME, RASPRuleProperties.class);
@@ -111,10 +133,26 @@ public class RASPConfiguration {
 		Level logLevel = Level.toLevel(AGENT_PROPERTIES.getLogLevel());
 
 		// 创建agent日志Logger
-		AGENT_LOGGER = createRASPLogger("agent", RASP_AGENT_FILE, logLevel);
+		AGENT_LOGGER = createRASPLogger("agent", RASP_AGENT_LOG_FILE, logLevel);
 
 		// 创建防御模块Logger
-		MODULES_LOGGER = createRASPLogger("modules", RASP_MODULES_FILE, logLevel);
+		MODULES_LOGGER = createRASPLogger("modules", RASP_MODULES_LOG_FILE, logLevel);
+	}
+
+	private static RASPVersion loadRASPVersion() {
+		String version = AGENT_PROPERTIES.getVersion();
+
+		Map<String, String> gitConfigMap = getPropertiesMap(RASP_LOADER_FILE, VERSION_FILE_NAME);
+
+		if (gitConfigMap != null) {
+			version = gitConfigMap.get("git.build.version");
+			String buildTime = gitConfigMap.get("git.build.time");
+			String commitId  = gitConfigMap.get("git.commit.id.abbrev");
+
+			return new RASPVersion(version, commitId, RASP_DIRECTORY, RASP_AGENT_FILE, buildTime);
+		}
+
+		return new RASPVersion(version, RASP_DIRECTORY, RASP_AGENT_FILE);
 	}
 
 	/**
@@ -146,19 +184,17 @@ public class RASPConfiguration {
 		// 配置文件
 		File configFile = new File(RASP_CONFIG_DIRECTORY, file);
 
-		RASPPropertiesConfiguration<T> configuration = null;
-
 		try {
-			configuration = new RASPPropertiesConfiguration<T>(configFile, clazz);
+			return new RASPPropertiesConfiguration<T>(configFile, clazz);
 		} catch (Exception e) {
 			if (AGENT_LOGGER != null) {
 				AGENT_LOGGER.error("加载" + AGENT_NAME + "配置文件[" + configFile + "]异常: ", e);
 			} else {
 				e.printStackTrace();
 			}
-		}
 
-		return configuration;
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
@@ -214,8 +250,6 @@ public class RASPConfiguration {
 
 		File configFile = new File(RASP_APP_CONFIG_DIRECTORY, filename);
 
-		RASPPropertiesConfiguration<RASPAppProperties> configuration = null;
-
 		try {
 			if (!DEFAULT_CONFIG_FILE.exists()) {
 				AGENT_LOGGER.error("{}读取配置文件：{}不存在！", AGENT_NAME, DEFAULT_CONFIG_FILE);
@@ -234,14 +268,19 @@ public class RASPConfiguration {
 			// 这里应该使用相对路径（如：apps/vul-test.properties），因为父级目录是：/rasp/config/
 			String configRelativePath = new File(RASP_APP_CONFIG_DIRECTORY.getName(), filename).getPath();
 
-			configuration = loadConfig(configRelativePath, RASPAppProperties.class);
-		} catch (IOException e) {
+			// 加载配置文件
+			RASPPropertiesConfiguration<RASPAppProperties> configuration = loadConfig(
+					configRelativePath, RASPAppProperties.class
+			);
+
+			APPLICATION_CONFIG_MAP.put(hashCode, configuration);
+
+			return configuration;
+		} catch (Exception e) {
 			AGENT_LOGGER.error(AGENT_NAME + "读取" + contextPath + "配置文件[" + configFile + "]异常: ", e);
+
+			throw new RuntimeException();
 		}
-
-		APPLICATION_CONFIG_MAP.put(hashCode, configuration);
-
-		return configuration;
 	}
 
 }

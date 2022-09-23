@@ -17,7 +17,6 @@ import ch.qos.logback.core.recovery.ResilientFileOutputStream;
 import ch.qos.logback.core.rolling.RolloverFailure;
 import ch.qos.logback.core.util.ContextUtil;
 import ch.qos.logback.core.util.FileSize;
-import ch.qos.logback.core.util.FileUtil;
 import org.javaweb.rasp.commons.utils.FileUtils;
 
 import java.io.File;
@@ -29,6 +28,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import static ch.qos.logback.core.CoreConstants.*;
+import static ch.qos.logback.core.util.FileUtil.createMissingParentDirectories;
+import static org.javaweb.rasp.commons.utils.FileUtils.copyFile;
 
 /**
  * FileAppender appends log events to a file.
@@ -61,8 +62,6 @@ public class RASPFileAppender<E> extends RASPOutputStreamAppender<E> {
 	private FileSize bufferSize = new FileSize(DEFAULT_BUFFER_SIZE);
 
 	private long fileSize;
-
-	private final long minFileSize = 1024 * 1000;
 
 	/**
 	 * The <b>File</b> property takes a string value which should be the name of
@@ -211,7 +210,7 @@ public class RASPFileAppender<E> extends RASPOutputStreamAppender<E> {
 
 		try {
 			File    file   = new File(fileName);
-			boolean result = FileUtil.createMissingParentDirectories(file);
+			boolean result = createMissingParentDirectories(file);
 
 			if (!result) {
 				addError("Failed to create parent directories for [" + file.getAbsolutePath() + "]");
@@ -237,7 +236,7 @@ public class RASPFileAppender<E> extends RASPOutputStreamAppender<E> {
 	 * When prudent is set to true, file appenders from multiple JVMs can safely
 	 * write to the same file.
 	 *
-	 * @param prudent
+	 * @param prudent prudent
 	 */
 	public void setPrudent(boolean prudent) {
 		this.prudent = prudent;
@@ -316,25 +315,44 @@ public class RASPFileAppender<E> extends RASPOutputStreamAppender<E> {
 					}
 				}
 
-				if (file.renameTo(targetFile)) {
-					try {
-						if (targetFile.length() > fileSize) {
-							List<File> fileList = FileUtils.split(targetFile, fileSize);
+				try {
+					// 复制原文件为新的日志文件，成功后删除原文件
+					copyFile(file, targetFile);
 
-							// 如果切割了多个文件，直接删除切割之前的文件
-							if (fileList.size() > 0) {
-								targetFile.delete();
-							}
-						}
-					} catch (IOException e) {
-						throw new RolloverFailure("File [" + targetFile + "] split failed.");
+					// 删除原文件
+					if (!file.delete()) {
+						throw new RolloverFailure("File [" + file + "] deletion failed.");
 					}
-				} else {
-					throw new RolloverFailure("File [" + file + "] rename failed.");
+				} catch (IOException e) {
+					throw new RolloverFailure("File [" + file + "] copy failed.");
 				}
+
+				// 切割日志文件
+				splitFile(targetFile);
 			} finally {
 				start();
 			}
+		}
+	}
+
+	/**
+	 * 文件切割
+	 * @param targetFile
+	 */
+	private void splitFile(File targetFile) {
+		try {
+			if (targetFile.length() > fileSize) {
+				List<File> fileList = FileUtils.split(targetFile, fileSize);
+
+				// 如果切割了多个文件，直接删除切割之前的文件
+				if (fileList.size() > 0) {
+					if (!targetFile.delete()) {
+						throw new RolloverFailure("Cut file [" + targetFile + "] deletion failed.");
+					}
+				}
+			}
+		} catch (IOException e) {
+			throw new RolloverFailure("Cut file [" + targetFile + "] cutting failed.");
 		}
 	}
 
@@ -342,7 +360,7 @@ public class RASPFileAppender<E> extends RASPOutputStreamAppender<E> {
 		if (fileSize > 0) {
 			this.fileSize = fileSize;
 		} else {
-			this.fileSize = minFileSize;
+			this.fileSize = 1024 * 1000;
 		}
 	}
 

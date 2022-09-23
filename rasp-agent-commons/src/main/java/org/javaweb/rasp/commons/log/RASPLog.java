@@ -1,14 +1,21 @@
 package org.javaweb.rasp.commons.log;
 
 import com.google.gson.annotations.SerializedName;
+import org.javaweb.rasp.commons.cache.RASPCachedRequest;
+import org.javaweb.rasp.commons.cache.RASPOutputStreamCache;
 import org.javaweb.rasp.commons.context.RASPHttpRequestContext;
 import org.javaweb.rasp.commons.servlet.HttpServletRequestProxy;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.TimeZone;
+import java.util.zip.GZIPOutputStream;
 
 import static java.lang.System.currentTimeMillis;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_PROPERTIES;
+import static org.javaweb.rasp.commons.utils.EncryptUtils.base64Encode;
 
 public class RASPLog implements Serializable {
 
@@ -77,8 +84,12 @@ public class RASPLog implements Serializable {
 
 	private static final String TIME_ZONE = TimeZone.getDefault().getID();
 
+	@SerializedName("response_out")
+	private String responseOut;
+
 	public RASPLog(RASPHttpRequestContext context) {
-		HttpServletRequestProxy request = context.getServletRequest();
+		HttpServletRequestProxy request       = context.getServletRequest();
+		RASPCachedRequest       cachedRequest = context.getCachedRequest();
 
 		this.logVersion = AGENT_PROPERTIES.getLogVersion();
 		this.appId = context.getAppProperties().getAppID();
@@ -95,6 +106,18 @@ public class RASPLog implements Serializable {
 		this.requestUrl = request.getRequestURL().toString();
 		this.documentRoot = context.getDocumentRoot().getAbsolutePath();
 		this.queryString = request.getQueryString();
+
+		try {
+			RASPOutputStreamCache outCache = cachedRequest.getOutputStreamCache();
+
+			if (outCache != null && outCache.getInputStream() != null) {
+				byte[] outputStream = covertGZIPBytes(outCache.getInputStream());
+
+				// 输出流
+				this.responseOut = new String(base64Encode(outputStream));
+			}
+		} catch (Exception ignored) {
+		}
 	}
 
 	public String getLogVersion() {
@@ -155,6 +178,30 @@ public class RASPLog implements Serializable {
 
 	public String getDocumentRoot() {
 		return documentRoot;
+	}
+
+	public String getResponseOut() {
+		return responseOut;
+	}
+
+	protected static byte[] covertGZIPBytes(InputStream in) throws IOException {
+		if (in != null) {
+			int                   a;
+			byte[]                bytes = new byte[1024];
+			ByteArrayOutputStream out   = new ByteArrayOutputStream();
+			GZIPOutputStream      gout  = new GZIPOutputStream(out);
+
+			while ((a = in.read(bytes)) != -1) {
+				gout.write(bytes, 0, a);
+			}
+
+			gout.finish();
+			gout.close();
+
+			return out.toByteArray();
+		}
+
+		return null;
 	}
 
 }

@@ -58,6 +58,11 @@ public abstract class RASPHttpRequestContext implements Closeable {
 	protected final Object cacheClass;
 
 	/**
+	 * 模块防御状态
+	 */
+	protected boolean moduleDefense;
+
+	/**
 	 * 静默模式
 	 */
 	protected final boolean silent;
@@ -71,6 +76,11 @@ public abstract class RASPHttpRequestContext implements Closeable {
 	 * 请求的文件绝对路径
 	 */
 	protected File requestFile;
+
+	/**
+	 * JSP文件路径，可能为空
+	 */
+	protected File jspFilePath;
 
 	/**
 	 * 获取最大缓存的Servlet输入输出流大小，默认10MB
@@ -123,9 +133,9 @@ public abstract class RASPHttpRequestContext implements Closeable {
 	protected final String userAgent;
 
 	/**
-	 * 是否需要过滤
+	 * 是否是白名单
 	 */
-	protected boolean mustFilter = true;
+	protected boolean whitelist = false;
 
 	/**
 	 * 创建RASP Http请求context对象
@@ -153,6 +163,7 @@ public abstract class RASPHttpRequestContext implements Closeable {
 		this.applicationConfig = getWebApplicationConfig(this);
 		this.appProperties = applicationConfig.getRaspProperties();
 		this.requestIP = getRemoteAddr(request);
+		this.moduleDefense = appProperties.isModuleDefense();
 		this.silent = appProperties.isSilent();
 
 		// 设置Servlet输入输出流大小，默认10MB
@@ -225,6 +236,24 @@ public abstract class RASPHttpRequestContext implements Closeable {
 	 */
 	public ClassLoader getAdapterClassLoader() {
 		return adapterClassLoader;
+	}
+
+	/**
+	 * 请求的URL是否是白名单
+	 *
+	 * @return 是否是白名单
+	 */
+	public boolean isWhitelist() {
+		return whitelist;
+	}
+
+	/**
+	 * 获取模块防御状态
+	 *
+	 * @return 是否加载防御模块检测
+	 */
+	public boolean isModuleDefense() {
+		return moduleDefense;
 	}
 
 	/**
@@ -341,6 +370,24 @@ public abstract class RASPHttpRequestContext implements Closeable {
 	}
 
 	/**
+	 * 设置JSP文件路径，当无法通过request分析出JSP文件路径时可以通过Hook的方式适配JSP路径
+	 *
+	 * @param filePath path
+	 */
+	public void setJspFilePath(File filePath) {
+		this.jspFilePath = filePath;
+	}
+
+	/**
+	 * 获取JSP文件路径
+	 *
+	 * @return path
+	 */
+	public File getJspFilePath() {
+		return jspFilePath;
+	}
+
+	/**
 	 * 获取最大缓存的流大小限制
 	 *
 	 * @return 最大缓存的流大小
@@ -453,6 +500,15 @@ public abstract class RASPHttpRequestContext implements Closeable {
 	public void close() throws IOException {
 		// 清除请求缓存数据
 		cachedRequest.close();
+	}
+
+	/**
+	 * RASP 处理请求的开始时间戳
+	 *
+	 * @return 请求开始时间戳
+	 */
+	public long getRequestStartNanoTime() {
+		return requestStartNanoTime;
 	}
 
 }

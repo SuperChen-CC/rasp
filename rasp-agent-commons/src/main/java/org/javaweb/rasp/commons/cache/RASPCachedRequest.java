@@ -29,6 +29,7 @@ public class RASPCachedRequest {
 	 */
 	private String cachedXML;
 
+
 	/**
 	 * 输出对象，可能是Writer或者OutputStream
 	 */
@@ -87,7 +88,7 @@ public class RASPCachedRequest {
 	}
 
 	/**
-	 * 组装所有来自客户端的请求参数,包含:Parameter、QueryString、Cookies、Header、Multipart、ParameterMap
+	 * 组装所有来自客户端的请求参数,包含:Parameter、ParameterMap、Cookies、Header、Multipart等
 	 *
 	 * @return 返回缓存在RASP上下文中的所有参数
 	 */

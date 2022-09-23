@@ -1,22 +1,27 @@
 package org.javaweb.rasp.commons.utils;
 
+import org.javaweb.rasp.commons.attack.RASPParameterPosition;
+import org.javaweb.rasp.commons.cache.RASPByteArrayInputStream;
 import org.javaweb.rasp.commons.cache.RASPCachedParameter;
 import org.javaweb.rasp.commons.cache.RASPCachedRequest;
+import org.javaweb.rasp.commons.cache.RASPOutputStreamCache;
 import org.javaweb.rasp.commons.context.RASPHttpRequestContext;
 import org.javaweb.rasp.commons.servlet.HttpServletRequestProxy;
 import org.javaweb.rasp.commons.servlet.HttpServletResponseProxy;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.javaweb.rasp.commons.attack.RASPParameterPosition.PARAMETER_MAP;
+import static org.javaweb.rasp.commons.attack.RASPParameterPosition.*;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_LOGGER;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_PROPERTIES;
-import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 import static org.javaweb.rasp.commons.utils.ArrayUtils.addAll;
 import static org.javaweb.rasp.commons.utils.IPV4Utils.*;
+import static org.javaweb.rasp.commons.utils.StringUtils.checkMaxLength;
+import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 
 /**
  * Created by yz on 2017/1/17.
@@ -26,6 +31,8 @@ import static org.javaweb.rasp.commons.utils.IPV4Utils.*;
 public class HttpServletRequestUtils {
 
 	private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
+
+	private static final int MAX_LENGTH = 5000;
 
 	/**
 	 * 缓存Web应用ContextPath
@@ -167,7 +174,13 @@ public class HttpServletRequestUtils {
 		Collection<String>  headers = response.getHeaderNames();
 
 		if (headers != null) {
+			map.put("Status", String.valueOf(response.getStatus()));
+
 			for (String name : headers) {
+				if ("Status".equalsIgnoreCase(name)) {
+					continue;
+				}
+
 				map.put(name, response.getHeader(name));
 			}
 		}
@@ -215,6 +228,26 @@ public class HttpServletRequestUtils {
 		return sb.toString();
 	}
 
+	public static String getRequestBodyStream(RASPHttpRequestContext context) {
+		RASPCachedRequest     cachedRequest = context.getCachedRequest();
+		RASPOutputStreamCache streamCache   = cachedRequest.getInputStreamCache();
+
+		if (streamCache == null) {
+			return null;
+		}
+
+		RASPByteArrayInputStream in = streamCache.getInputStream();
+
+		try {
+			if (in != null) {
+				return IOUtils.toString(in);
+			}
+		} catch (IOException ignored) {
+		}
+
+		return null;
+	}
+
 	/**
 	 * 获取Http请求中的参数，用于日志记录
 	 *
@@ -231,7 +264,12 @@ public class HttpServletRequestUtils {
 			logMap = new HashMap<String, String[]>();
 
 			if (map != null && !map.isEmpty()) {
-				logMap.putAll(map);
+				for (String key : map.keySet()) {
+					key = checkMaxLength(key, MAX_LENGTH);
+					String[] values = checkMaxLength(map.get(key), MAX_LENGTH);
+
+					logMap.put(key, values);
+				}
 			}
 
 			// 缓存的被调用过的参数集合
@@ -239,12 +277,15 @@ public class HttpServletRequestUtils {
 
 			// 缓存ParameterMap
 			for (RASPCachedParameter parameter : cachedParameterList) {
-				if (PARAMETER_MAP == parameter.getRaspAttackPosition()) {
+				RASPParameterPosition position = parameter.getRaspAttackPosition();
+
+				// 不记录ParameterMap、JSON、XML，JSON/XML请求的body单独记录
+				if (PARAMETER_MAP == position || position == JSON || position == XML) {
 					continue;
 				}
 
-				String   key    = parameter.getKey();
-				String[] values = parameter.getValue();
+				String   key    = checkMaxLength(parameter.getKey(), MAX_LENGTH);
+				String[] values = checkMaxLength(parameter.getValue(), MAX_LENGTH);
 
 				if (map != null) {
 					String[] val = map.get(key);

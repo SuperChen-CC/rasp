@@ -13,7 +13,6 @@ public class RASPLogData {
 	 */
 	private final boolean encrypt;
 
-
 	public RASPLogData(RASPLog raspLog, Logger logger, boolean encrypt) {
 		this.raspLog = raspLog;
 		this.logger = logger;

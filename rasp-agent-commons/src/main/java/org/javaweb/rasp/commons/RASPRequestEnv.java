@@ -11,6 +11,7 @@ import java.util.Map;
 
 import static org.javaweb.rasp.commons.config.RASPConfiguration.RASP_APP_CONFIG_DIRECTORY;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.getWebApplicationConfig;
+import static org.javaweb.rasp.commons.constants.RASPAppConstants.DEFAULT_APP_ID;
 import static org.javaweb.rasp.commons.constants.RASPConstants.ATTACK_LOGGER_PREFIX;
 import static org.javaweb.rasp.commons.log.RASPLogger.getLoggerName;
 import static org.javaweb.rasp.commons.log.RASPLogger.hasLogger;
@@ -68,6 +69,29 @@ public class RASPRequestEnv {
 		}
 
 		return configList;
+	}
+
+	/**
+	 * 获取当前RASP防御下的所有的应用ID列表
+	 *
+	 * @return IDS
+	 */
+	public static List<String> getAppIdList() {
+		List<String> appList = new ArrayList<String>();
+
+		// 获取应用列表
+		List<RASPPropertiesConfiguration<RASPAppProperties>> appConfigList = getAppConfigList();
+
+		// 遍历所有的web应用
+		for (RASPPropertiesConfiguration<RASPAppProperties> appConfig : appConfigList) {
+			String appId = appConfig.getRaspProperties().getAppID();
+
+			if (!DEFAULT_APP_ID.equals(appId)) {
+				appList.add(appId);
+			}
+		}
+
+		return appList;
 	}
 
 }

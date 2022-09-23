@@ -8,9 +8,24 @@ public class RASPAppConstants {
 	public static final String APP_ID = "app_id";
 
 	/**
+	 * 默认的未初始化的应用ID
+	 */
+	public static final String DEFAULT_APP_ID = "{app_id}";
+
+	/**
 	 * 开启的RASP 防御模块
 	 */
 	public static final String MODULES_OPEN = "modules.open";
+
+	/**
+	 * 防御模块状态：开启/关闭检测，如果配置为false则会关闭所有防御模块检测
+	 */
+	public static final String MODULE_DEFENSE = "module.defense";
+
+	/**
+	 * RASP模块检测熔断时间（毫秒）, <=0 表示不限制
+	 */
+	public static final String RASP_PROCESS_TIMEOUT = "rasp_process_timeout";
 
 	/**
 	 * 是否是静默模式: true、false

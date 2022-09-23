@@ -45,8 +45,12 @@ public class JsonUtils {
 
 	public static Map<String, Object> toJsonMap(Object object) {
 		if (object != null) {
-			return fromJson(object, new TypeToken<Map<String, Object>>() {
+			Map<String, Object> json = fromJson(object, new TypeToken<Map<String, Object>>() {
 			}.getType());
+
+			if (json != null) {
+				return json;
+			}
 		}
 
 		return new HashMap<String, Object>();
@@ -54,8 +58,12 @@ public class JsonUtils {
 
 	public static Set<Map<String, Object>> toJsonSetMap(Object object) {
 		if (object != null) {
-			return fromJson(object, new TypeToken<Set<Map<String, Object>>>() {
+			Set<Map<String, Object>> json = fromJson(object, new TypeToken<Set<Map<String, Object>>>() {
 			}.getType());
+
+			if (json != null) {
+				return json;
+			}
 		}
 
 		return new HashSet<Map<String, Object>>();
