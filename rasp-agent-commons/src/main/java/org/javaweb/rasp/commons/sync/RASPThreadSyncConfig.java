@@ -3,6 +3,8 @@ package org.javaweb.rasp.commons.sync;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 public abstract class RASPThreadSyncConfig {
 
 	/**
@@ -47,11 +49,23 @@ public abstract class RASPThreadSyncConfig {
 				return getSyncInterval();
 			} else if ("dataSynchronization".equals(key)) {
 				dataSynchronization();
+
+				// 同步时需间隔一定的时间
+				syncInterval();
 			}
 
 			return null;
 		}
 	};
+
+	private void syncInterval() {
+		try {
+			if (syncInterval > 0) {
+				Thread.sleep(SECONDS.toMillis(getSyncInterval()));
+			}
+		} catch (InterruptedException ignored) {
+		}
+	}
 
 	public Map<Object, Object> getCallback() {
 		return callback;

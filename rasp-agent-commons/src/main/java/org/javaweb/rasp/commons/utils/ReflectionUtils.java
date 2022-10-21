@@ -33,15 +33,11 @@ public final class ReflectionUtils {
 
 	private static final Map<Integer, Field> CACHE_CLASS_FIELD_MAP = new ConcurrentHashMap<Integer, Field>();
 
-	public static String methodToString(String method, Class<?>... classes) {
-		return methodToString(null, method, classes);
-	}
-
 	public static String methodToString(String className, String method, Class<?>... classes) {
 		StringBuilder sb = new StringBuilder();
 
 		if (className != null) {
-			sb.append(className).append(".");
+			sb.append(className).append('.');
 		}
 
 		return sb.append(method).append(methodToString(classes)).toString();
@@ -51,11 +47,11 @@ public final class ReflectionUtils {
 		StringBuilder sb = new StringBuilder("(");
 
 		for (int i = 0; i < classes.length; i++) {
-			sb.append(classes[i]);
-
-			if (i < classes.length - 1) {
-				sb.append(",");
+			if (i > 0) {
+				sb.append(',');
 			}
+
+			sb.append(classes[i].getName());
 		}
 
 		return sb.append(')').toString();
@@ -70,7 +66,7 @@ public final class ReflectionUtils {
 
 		if (method != null) {
 			if (sb.length() > 0) {
-				sb.append("#");
+				sb.append('#');
 			}
 
 			sb.append(method);
@@ -84,7 +80,7 @@ public final class ReflectionUtils {
 		sb.append(getMethodHashcode(className, method));
 
 		if (typeClasses.length > 0) {
-			sb.append("(");
+			sb.append('(');
 
 			for (int i = 0; i < typeClasses.length; i++) {
 				if (i > 0) {
@@ -94,7 +90,7 @@ public final class ReflectionUtils {
 				sb.append(typeClasses[i].getName());
 			}
 
-			sb.append(")");
+			sb.append(')');
 		}
 
 		return sb.hashCode();
@@ -200,7 +196,10 @@ public final class ReflectionUtils {
 		try {
 			return (T) invokeMethod(instance, name, argTypes, args);
 		} catch (Exception e) {
-			AGENT_LOGGER.debug(AGENT_NAME + "调用Proxy：" + instance.getClass().getName() + "，方法异常：" + e, e);
+			if (AGENT_LOGGER.isDebugEnabled()) {
+				AGENT_LOGGER.error(AGENT_NAME + "反射调用" + instance.getClass().getName() + "#" + name + "异常", e);
+			}
+
 			return null;
 		}
 	}
@@ -209,7 +208,10 @@ public final class ReflectionUtils {
 		try {
 			return (T) invokeField(instance, name);
 		} catch (Exception e) {
-			AGENT_LOGGER.debug(AGENT_NAME + "调用Proxy：" + instance.getClass().getName() + "，成员变量异常：" + e, e);
+			if (AGENT_LOGGER.isDebugEnabled()) {
+				AGENT_LOGGER.error(AGENT_NAME + "反射调用" + instance.getClass().getName() + "." + name + "异常", e);
+			}
+
 			return null;
 		}
 	}
