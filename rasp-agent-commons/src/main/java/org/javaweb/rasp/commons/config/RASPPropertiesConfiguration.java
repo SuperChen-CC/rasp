@@ -92,7 +92,9 @@ public class RASPPropertiesConfiguration<T extends RASPProperties> {
 					String key = new String(chars, 0, valIndex).trim();
 
 					// 替换参数值中的"\"，将两个"\\"替换成一个"\"
-					String value = loadConvert(new String(chars, valIndex + 1, chars.length - valIndex - 1)).trim();
+					String value = loadConvert(
+							new String(chars, valIndex + 1, chars.length - valIndex - 1)
+					).trim();
 
 					if (key.length() > 0) {
 						configMap.put(key, value);

@@ -13,21 +13,21 @@
  */
 package org.javaweb.rasp.commons.logback;
 
-import ch.qos.logback.core.CoreConstants;
-import ch.qos.logback.core.FileAppender;
-import ch.qos.logback.core.rolling.RolloverFailure;
-import ch.qos.logback.core.rolling.TriggeringPolicy;
-import ch.qos.logback.core.rolling.helper.CompressionMode;
-import ch.qos.logback.core.rolling.helper.FileNamePattern;
-import ch.qos.logback.core.util.ContextUtil;
+import org.javaweb.rasp.commons.logback.core.CoreConstants;
+import org.javaweb.rasp.commons.logback.core.FileAppender;
+import org.javaweb.rasp.commons.logback.core.rolling.RolloverFailure;
+import org.javaweb.rasp.commons.logback.core.rolling.TriggeringPolicy;
+import org.javaweb.rasp.commons.logback.core.rolling.helper.CompressionMode;
+import org.javaweb.rasp.commons.logback.core.rolling.helper.FileNamePattern;
+import org.javaweb.rasp.commons.logback.core.util.ContextUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static ch.qos.logback.core.CoreConstants.CODES_URL;
-import static ch.qos.logback.core.CoreConstants.MORE_INFO_PREFIX;
+import static org.javaweb.rasp.commons.logback.core.CoreConstants.CODES_URL;
+import static org.javaweb.rasp.commons.logback.core.CoreConstants.MORE_INFO_PREFIX;
 
 /**
  * <code>RollingFileAppender</code> extends {@link FileAppender} to backup the

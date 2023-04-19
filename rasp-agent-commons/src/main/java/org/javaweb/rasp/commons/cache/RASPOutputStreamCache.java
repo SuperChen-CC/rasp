@@ -1,13 +1,16 @@
 package org.javaweb.rasp.commons.cache;
 
 import org.javaweb.rasp.commons.RASPSerialization;
-import org.javaweb.rasp.commons.context.RASPHttpRequestContext;
+import org.javaweb.rasp.commons.context.RASPServletRequestContext;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.rasp.proxy.loader.HookResult;
 
 import static java.rasp.proxy.loader.HookResultType.THROW;
+import static org.javaweb.rasp.commons.utils.EncryptUtils.base64Encode;
+import static org.javaweb.rasp.commons.utils.IOUtils.covertGZipBytes;
+import static org.javaweb.rasp.commons.utils.IOUtils.toByteArray;
 
 public class RASPOutputStreamCache extends OutputStream {
 
@@ -18,7 +21,7 @@ public class RASPOutputStreamCache extends OutputStream {
 	/**
 	 * 最大缓存大小，默认10M
 	 */
-	private int maxCacheSize = -1;
+	private final int maxCacheSize;
 
 	/**
 	 * 是否已经反序列化了
@@ -28,7 +31,7 @@ public class RASPOutputStreamCache extends OutputStream {
 	/**
 	 * RASP上下文
 	 */
-	RASPHttpRequestContext context;
+	private RASPServletRequestContext context;
 
 	/**
 	 * 非API请求默认最大值不能超过10M
@@ -37,7 +40,7 @@ public class RASPOutputStreamCache extends OutputStream {
 
 	private final RASPByteArrayOutputStream cachedStream = new RASPByteArrayOutputStream();
 
-	public RASPOutputStreamCache(RASPHttpRequestContext context) {
+	public RASPOutputStreamCache(RASPServletRequestContext context) {
 		this.serialization = null;
 		int maxCacheSize = context.getMaxStreamCacheSize();
 
@@ -54,7 +57,7 @@ public class RASPOutputStreamCache extends OutputStream {
 	 * @param context       RASP上下文
 	 * @param serialization 缓存JSON/XML类型时必须传入RASPSerialization对象
 	 */
-	public RASPOutputStreamCache(RASPHttpRequestContext context, RASPSerialization serialization) {
+	public RASPOutputStreamCache(RASPServletRequestContext context, RASPSerialization serialization) {
 		this.context = context;
 		int contentLength = context.getContentLength();
 		int maxCacheSize  = context.getMaxStreamCacheSize();
@@ -103,6 +106,31 @@ public class RASPOutputStreamCache extends OutputStream {
 	@Override
 	public void close() throws IOException {
 		completed();
+	}
+
+	public byte[] toBytes() {
+		try {
+			if (this.getInputStream() != null) {
+				return toByteArray(this.getInputStream());
+			}
+		} catch (Exception ignored) {
+		}
+
+		return null;
+	}
+
+	public String toBase64() {
+		try {
+			if (this.getInputStream() != null) {
+				byte[] outputStream = covertGZipBytes(this.getInputStream());
+
+				// 输出流
+				return new String(base64Encode(outputStream));
+			}
+		} catch (Exception ignored) {
+		}
+
+		return null;
 	}
 
 	public void completed() throws IOException {

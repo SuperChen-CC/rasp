@@ -1,11 +1,9 @@
 package org.javaweb.rasp.commons.attack;
 
-import org.javaweb.rasp.commons.MethodHookEvent;
-
 import java.rasp.proxy.loader.RASPModuleType;
 
-import static org.javaweb.rasp.loader.AgentConstants.AGENT_PROXY_PACKAGE_PREFIX;
 import static org.javaweb.rasp.commons.utils.StringUtils.genUUID;
+import static org.javaweb.rasp.loader.AgentConstants.AGENT_PROXY_PACKAGE_PREFIX;
 
 /**
  * Web攻击详情信息
@@ -18,7 +16,7 @@ public class RASPAttackInfo {
 	/**
 	 * 攻击类型
 	 */
-	private transient RASPModuleType raspModuleType;
+	private final transient RASPModuleType raspModuleType;
 
 	/**
 	 * 攻击类型,如: SQL注入文件上传
@@ -38,17 +36,12 @@ public class RASPAttackInfo {
 	/**
 	 * 发现攻击的具体位置,如: HEADER
 	 */
-	private final RASPParameterPosition position;
+	private final RASPPosition position;
 
 	/**
 	 * 是否阻断请求
 	 */
 	private final boolean blockRequest;
-
-	/**
-	 * RASP Hook方法信息
-	 */
-	private RASPMethodHookInfo methodHookInfo;
 
 	/**
 	 * Hook调用链
@@ -62,40 +55,21 @@ public class RASPAttackInfo {
 
 	private static final String HOOK_PROXY_CLASS_NAME = AGENT_PROXY_PACKAGE_PREFIX + "loader.HookProxy";
 
-	public RASPAttackInfo(RASPModuleType raspModuleType, String parameter, String[] values,
-	                      RASPParameterPosition position, boolean blockRequest) {
-
-		this(raspModuleType, parameter, values, position, null, blockRequest);
+	public RASPAttackInfo(RASPModuleType moduleType, String parameter, String value, RASPPosition p, boolean block) {
+		this(moduleType, parameter, value != null ? new String[]{value} : new String[0], p, block);
 	}
 
-	public RASPAttackInfo(RASPModuleType raspModuleType, String parameter, String values,
-	                      RASPParameterPosition position, boolean blockRequest) {
-		this(raspModuleType, parameter, new String[]{values}, position, blockRequest);
-	}
-
-	public RASPAttackInfo(RASPModuleType moduleType, String parameter, String value,
-	                      RASPParameterPosition position, MethodHookEvent e, boolean blockRequest) {
-
-		this(moduleType, parameter, value != null ? new String[]{value} : new String[0], position, e, blockRequest);
-	}
-
-	public RASPAttackInfo(RASPModuleType raspModuleType, String parameter, String[] values,
-	                      RASPParameterPosition position, MethodHookEvent event, boolean blockRequest) {
-
-		this.raspModuleType = raspModuleType;
-		this.type = raspModuleType.getModuleName();
+	public RASPAttackInfo(RASPModuleType moduleType, String parameter, String[] values, RASPPosition p, boolean block) {
+		this.raspModuleType = moduleType;
+		this.type = moduleType.getModuleName();
 		this.parameter = parameter;
 		this.values = values;
-		this.position = position;
-		this.blockRequest = blockRequest;
+		this.position = p;
+		this.blockRequest = block;
 
 		// 检测当前防御模块是否需要打印调用链
-		if (raspModuleType.isPrintTrace()) {
+		if (moduleType.isPrintTrace()) {
 			this.initTraceElements();
-		}
-
-		if (event != null) {
-			this.methodHookInfo = new RASPMethodHookInfo(event);
 		}
 	}
 
@@ -137,15 +111,6 @@ public class RASPAttackInfo {
 		return raspModuleType;
 	}
 
-	/**
-	 * 设置攻击类型
-	 *
-	 * @param type 攻击类型
-	 */
-	public void setRaspModuleType(RASPModuleType type) {
-		this.raspModuleType = type;
-	}
-
 	public String getType() {
 		return type;
 	}
@@ -173,17 +138,8 @@ public class RASPAttackInfo {
 	 *
 	 * @return 攻击发生位置
 	 */
-	public RASPParameterPosition getPosition() {
+	public RASPPosition getPosition() {
 		return position;
-	}
-
-	/**
-	 * RASP获取方法Hook信息
-	 *
-	 * @return Hook信息
-	 */
-	public RASPMethodHookInfo getMethodHookInfo() {
-		return methodHookInfo;
 	}
 
 	public boolean isBlockRequest() {

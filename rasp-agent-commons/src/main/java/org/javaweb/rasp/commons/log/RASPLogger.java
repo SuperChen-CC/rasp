@@ -1,16 +1,15 @@
 package org.javaweb.rasp.commons.log;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.util.FileSize;
-import org.javaweb.rasp.commons.config.RASPConfiguration;
-import org.javaweb.rasp.loader.AgentConstants;
 import org.javaweb.rasp.commons.logback.RASPFileAppender;
-import org.slf4j.LoggerFactory;
+import org.javaweb.rasp.commons.logback.classic.Level;
+import org.javaweb.rasp.commons.logback.classic.Logger;
+import org.javaweb.rasp.commons.logback.classic.LoggerContext;
+import org.javaweb.rasp.commons.logback.classic.encoder.PatternLayoutEncoder;
+import org.javaweb.rasp.commons.logback.classic.spi.ILoggingEvent;
+import org.javaweb.rasp.commons.logback.core.Appender;
+import org.javaweb.rasp.commons.logback.core.util.FileSize;
+import org.javaweb.rasp.commons.slf4j.LoggerFactory;
+import org.javaweb.rasp.loader.AgentConstants;
 
 import java.io.File;
 import java.rasp.proxy.loader.RASPModuleType;
@@ -19,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static java.lang.Long.MAX_VALUE;
+import static org.javaweb.rasp.commons.config.RASPConfiguration.MODULES_LOGGER;
 import static org.javaweb.rasp.commons.constants.RASPConstants.*;
 
 public class RASPLogger {
@@ -26,7 +26,9 @@ public class RASPLogger {
 	private static final LoggerContext LOGGER_CONTEXT = (LoggerContext) LoggerFactory.getILoggerFactory();
 
 	public static Logger createRASPLogger(String name, File file, Level level) {
-		return createRASPLogger(name, file, level, "%date %level [%thread] %logger{10} [%file:%line] %msg%n", null);
+		return createRASPLogger(
+				name, file, level, "%date %level [%thread] %logger{10} [%file:%line] %msg%n", null
+		);
 	}
 
 	public static Logger createRASPLogger(String name, File file, Level level, String pattern, String fileSize) {
@@ -110,6 +112,10 @@ public class RASPLogger {
 		}
 	}
 
+	public static Logger getLogger(String name) {
+		return LOGGER_CONTEXT.getLogger(name);
+	}
+
 	public static void moduleErrorLog(RASPModuleType type, Exception e, Object... args) {
 		StringBuilder sb = new StringBuilder(AgentConstants.AGENT_NAME).append("检测").append(type.getModuleName());
 
@@ -119,10 +125,10 @@ public class RASPLogger {
 
 		sb.append("异常：").append(e);
 
-		RASPConfiguration.MODULES_LOGGER.error(sb.toString(), e);
+		MODULES_LOGGER.error(sb.toString(), e);
 	}
 
-	public static String getLoggerName(String prefix, String name) {
+	public static String createLoggerName(String prefix, String name) {
 		return prefix + name.hashCode();
 	}
 

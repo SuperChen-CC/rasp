@@ -1,6 +1,6 @@
 package org.javaweb.rasp.commons;
 
-import com.google.gson.annotations.SerializedName;
+import org.javaweb.rasp.commons.gson.annotations.SerializedName;
 
 import java.io.File;
 

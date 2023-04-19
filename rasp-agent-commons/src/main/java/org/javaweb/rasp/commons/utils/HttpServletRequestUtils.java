@@ -1,26 +1,25 @@
 package org.javaweb.rasp.commons.utils;
 
-import org.javaweb.rasp.commons.attack.RASPParameterPosition;
-import org.javaweb.rasp.commons.cache.RASPByteArrayInputStream;
+import org.javaweb.rasp.commons.attack.RASPPosition;
 import org.javaweb.rasp.commons.cache.RASPCachedParameter;
-import org.javaweb.rasp.commons.cache.RASPCachedRequest;
-import org.javaweb.rasp.commons.cache.RASPOutputStreamCache;
-import org.javaweb.rasp.commons.context.RASPHttpRequestContext;
+import org.javaweb.rasp.commons.cache.RASPRequestCached;
+import org.javaweb.rasp.commons.context.RASPServletRequestContext;
 import org.javaweb.rasp.commons.servlet.HttpServletRequestProxy;
 import org.javaweb.rasp.commons.servlet.HttpServletResponseProxy;
+import org.javaweb.rasp.commons.servlet.HttpSessionProxy;
+import org.javaweb.rasp.commons.servlet.ServletContextProxy;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.javaweb.rasp.commons.attack.RASPParameterPosition.*;
+import static org.javaweb.rasp.commons.attack.RASPPosition.*;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_LOGGER;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_PROPERTIES;
-import static org.javaweb.rasp.commons.utils.ArrayUtils.addAll;
 import static org.javaweb.rasp.commons.utils.IPV4Utils.*;
 import static org.javaweb.rasp.commons.utils.StringUtils.checkMaxLength;
+import static org.javaweb.rasp.commons.utils.StringUtils.isNotEmpty;
 import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 
 /**
@@ -28,7 +27,7 @@ import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
  *
  * @author yz
  */
-public class HttpServletRequestUtils {
+public class HttpServletRequestUtils extends RASPRequestUtils {
 
 	private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
 
@@ -39,6 +38,24 @@ public class HttpServletRequestUtils {
 	 */
 	private static final Map<Integer, File> DOCUMENT_ROOT_MAP = new ConcurrentHashMap<Integer, File>();
 
+	public static ServletContextProxy getServletContext(HttpServletRequestProxy request) {
+		ServletContextProxy sc = request.getServletContext();
+
+		if (sc == null) {
+			// 适配Servlet3.1以下版本
+			HttpSessionProxy session = request.getSession(false);
+
+			if (session == null) {
+				// 直接getSession(true)会影响到shiro创建session
+				session = request.getSession(true);
+			}
+
+			return session != null ? session.getServletContext() : null;
+		}
+
+		return sc;
+	}
+
 	/**
 	 * 获取web目录,Weblogic 默认以war包部署的时候不能用getRealPath,xxx.getResource("/")获取
 	 * 的是当前应用所在的类路径，截取到WEB-INF之后的路径就是当前应用的web根目录了
@@ -46,7 +63,7 @@ public class HttpServletRequestUtils {
 	 * @param context RASP上下文
 	 * @return Web根目录
 	 */
-	public static File getDocumentRootFile(RASPHttpRequestContext context) {
+	public static File getDocumentRootFile(RASPServletRequestContext context) {
 		String                  contextPath  = context.getContextPath();
 		HttpServletRequestProxy request      = context.getServletRequest();
 		int                     contextHash  = contextPath.hashCode();
@@ -63,18 +80,22 @@ public class HttpServletRequestUtils {
 			return new File(webRoot);
 		}
 
-		try {
-			// 处理Servlet 3+，无法获取getRealPath的情况，如：Weblogic
-			URL resource = request.getServletContext().getResource("/");
+		ServletContextProxy sc = getServletContext(request);
 
-			if (resource != null && isTempDir(resource.getFile())) return new File(resource.getFile());
-		} catch (Throwable t) {
+		if (sc != null) {
 			try {
-				// Servlet 2.x，request.getSession()可能会导致shiro的session无法获取，
-				URL resource = request.getSession().getServletContext().getResource("/");
+				// 处理Servlet 3+，无法获取getRealPath的情况，如：Weblogic
+				URL resource = sc.getResource("/");
 
 				if (resource != null && isTempDir(resource.getFile())) return new File(resource.getFile());
-			} catch (Throwable ignored) {
+			} catch (Throwable t) {
+				try {
+					// Servlet 2.x，request.getSession()可能会导致shiro的session无法获取，
+					URL resource = sc.getResource("/");
+
+					if (resource != null && isTempDir(resource.getFile())) return new File(resource.getFile());
+				} catch (Throwable ignored) {
+				}
 			}
 		}
 
@@ -122,18 +143,17 @@ public class HttpServletRequestUtils {
 	}
 
 	/**
-	 * 如果经过nginx反向代理后可能会获取到一个本地的IP地址如:127.0.0.1、192.168.1.100
-	 * 配置nginx把客户端真实IP地址放到nginx请求头中的x-real-ip或x-forwarded-for的值
+	 * 如果经过nginx反向代理后可能会获取到一个本地的IP地址如:127.0.0.1、192.168.1.100，
+	 * 配置nginx把客户端真实IP地址放到nginx请求头中的x-real-ip或x-forwarded-for的值。
+	 * 优先使用用户配置的请求头IP字段，然后再通过HTTP请求连接获取IP。
 	 *
 	 * @param request 请求对象
 	 * @return 获取客户端IP
 	 */
 	public static String getRemoteAddr(HttpServletRequestProxy request) {
-		String ip = request.getRemoteAddr();
+		String ipKey = AGENT_PROPERTIES.getProxyIpHeader();
 
-		// 如果IP地址为空或者IP是本机、内网地址，需要解析请求头中的IP
-		if (isLanIP(ip)) {
-			String ipKey   = AGENT_PROPERTIES.getProxyIpHeader();
+		if (isNotEmpty(ipKey)) {
 			String proxyIP = request.getHeader(ipKey);
 
 			if (proxyIP != null) {
@@ -141,6 +161,8 @@ public class HttpServletRequestUtils {
 				if (textToNumericFormatV6(proxyIP) != null) return proxyIP;
 			}
 		}
+
+		String ip = request.getRemoteAddr();
 
 		return "0:0:0:0:0:0:0:1".equals(ip) ? "127.0.0.1" : ip;
 	}
@@ -189,77 +211,17 @@ public class HttpServletRequestUtils {
 	}
 
 	/**
-	 * 实现htmlSpecialChars函数把一些预定义的字符转换为HTML实体编码
-	 *
-	 * @param content 输入的字符串内容
-	 * @return HTML实体化转义后的字符串
-	 */
-	public static String htmlSpecialChars(String content) {
-		if (content == null) {
-			return null;
-		}
-
-		char[]        charArray = content.toCharArray();
-		StringBuilder sb        = new StringBuilder();
-
-		for (char c : charArray) {
-			switch (c) {
-				case '&':
-					sb.append("&amp;");
-					break;
-				case '"':
-					sb.append("&quot;");
-					break;
-				case '\'':
-					sb.append("&#039;");
-					break;
-				case '<':
-					sb.append("&lt;");
-					break;
-				case '>':
-					sb.append("&gt;");
-					break;
-				default:
-					sb.append(c);
-					break;
-			}
-		}
-
-		return sb.toString();
-	}
-
-	public static String getRequestBodyStream(RASPHttpRequestContext context) {
-		RASPCachedRequest     cachedRequest = context.getCachedRequest();
-		RASPOutputStreamCache streamCache   = cachedRequest.getInputStreamCache();
-
-		if (streamCache == null) {
-			return null;
-		}
-
-		RASPByteArrayInputStream in = streamCache.getInputStream();
-
-		try {
-			if (in != null) {
-				return IOUtils.toString(in);
-			}
-		} catch (IOException ignored) {
-		}
-
-		return null;
-	}
-
-	/**
 	 * 获取Http请求中的参数，用于日志记录
 	 *
 	 * @param context RASP上下文
 	 * @return 参数Map
 	 */
-	public static Map<String, String[]> getLogParameterMap(RASPHttpRequestContext context) {
+	public static Map<String, String[]> getLogParameterMap(RASPServletRequestContext context) {
 		Map<String, String[]> logMap = null;
 
 		try {
 			HttpServletRequestProxy servletRequest = context.getServletRequest();
-			RASPCachedRequest       cachedRequest  = context.getCachedRequest();
+			RASPRequestCached       cachedRequest  = context.getCachedRequest();
 			Map<String, String[]>   map            = servletRequest.getParameterMap();
 			logMap = new HashMap<String, String[]>();
 
@@ -277,7 +239,7 @@ public class HttpServletRequestUtils {
 
 			// 缓存ParameterMap
 			for (RASPCachedParameter parameter : cachedParameterList) {
-				RASPParameterPosition position = parameter.getRaspAttackPosition();
+				RASPPosition position = parameter.getRaspAttackPosition();
 
 				// 不记录ParameterMap、JSON、XML，JSON/XML请求的body单独记录
 				if (PARAMETER_MAP == position || position == JSON || position == XML) {
@@ -295,7 +257,7 @@ public class HttpServletRequestUtils {
 					}
 				}
 
-				logMap.put(key, addAll(logMap.get(key), values));
+				logMap.put(key, values);
 			}
 		} catch (Exception e) {
 			AGENT_LOGGER.error("{}记录日志异常：{}", AGENT_NAME, e.toString());

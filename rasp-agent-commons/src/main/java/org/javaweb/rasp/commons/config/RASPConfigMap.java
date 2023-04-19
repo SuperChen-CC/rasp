@@ -39,7 +39,7 @@ public class RASPConfigMap<K, V> extends HashMap<K, V> {
 		String value = getString(key);
 
 		if (isNotEmpty(value)) {
-			return equalIgnoreCase("true", value);
+			return equalsIgnoreCase("true", value);
 		} else if (defaultValue != null) {
 			return defaultValue;
 		}
@@ -114,7 +114,7 @@ public class RASPConfigMap<K, V> extends HashMap<K, V> {
 		Object obj = get(key);
 
 		if (obj instanceof List) {
-			return join((List) obj, ',');
+			return join(((List<?>) obj).iterator(), ',');
 		}
 
 		return (String) obj;

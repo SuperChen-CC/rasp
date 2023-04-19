@@ -1,31 +1,21 @@
 package org.javaweb.rasp.commons.cache;
 
 import org.javaweb.rasp.commons.RASPParameterFilter;
-import org.javaweb.rasp.commons.context.RASPHttpRequestContext;
+import org.javaweb.rasp.commons.context.RASPContext;
 
 import java.rasp.proxy.loader.HookResult;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static java.rasp.proxy.loader.HookResultType.RETURN;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_LOGGER;
 import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_STRING_ARRAY_RESULT;
 import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
-import static java.rasp.proxy.loader.HookResultType.RETURN;
 
 public class RASPParameterSet<E> extends HashSet<E> {
 
-	/**
-	 * RASP上下文
-	 */
-	private final RASPHttpRequestContext context;
-
 	private static final List<RASPParameterFilter> PARAMETER_FILTER = new CopyOnWriteArrayList<RASPParameterFilter>();
-
-	public RASPParameterSet(RASPHttpRequestContext context) {
-		this.context = context;
-	}
 
 	public static void addParameterFilter(String className) {
 		try {
@@ -43,7 +33,7 @@ public class RASPParameterSet<E> extends HashSet<E> {
 		}
 	}
 
-	public HookResult<String[]> cacheParameter(RASPCachedParameter parameter) {
+	public HookResult<String[]> cacheParameter(RASPCachedParameter parameter, RASPContext context) {
 		if (contains(parameter)) {
 			return DEFAULT_STRING_ARRAY_RESULT;
 		}

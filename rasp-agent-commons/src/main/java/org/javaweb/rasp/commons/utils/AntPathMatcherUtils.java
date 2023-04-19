@@ -582,15 +582,15 @@ public class AntPathMatcherUtils {
 	 */
 
 	public String combine(String pattern1, String pattern2) {
-		if (!hasText(pattern1) && !hasText(pattern2)) {
+		if (hasText(pattern1) && hasText(pattern2)) {
 			return "";
 		}
 
-		if (!hasText(pattern1)) {
+		if (hasText(pattern1)) {
 			return pattern2;
 		}
 
-		if (!hasText(pattern2)) {
+		if (hasText(pattern2)) {
 			return pattern1;
 		}
 
@@ -652,7 +652,7 @@ public class AntPathMatcherUtils {
 	/**
 	 * Given a full path, returns a {@link Comparator} suitable for sorting patterns in order of
 	 * explicitness.
-	 * <p>This {@code Comparator} will {@linkplain java.util.List#sort(Comparator) sort}
+	 * <p>This {@code Comparator} will {@linkplain List#sort(Comparator) sort}
 	 * a list so that more specific patterns (without URI templates or wild cards) come before
 	 * generic patterns. So given a list with the following patterns, the returned comparator
 	 * will sort this list so that the order will be as indicated.
@@ -763,7 +763,6 @@ public class AntPathMatcherUtils {
 			}
 		}
 	}
-
 
 	/**
 	 * The default {@link Comparator} implementation returned by
@@ -944,7 +943,6 @@ public class AntPathMatcherUtils {
 			}
 		}
 	}
-
 
 	/**
 	 * A simple cache for patterns that depend on the configured path separator.

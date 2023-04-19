@@ -1,6 +1,6 @@
 package org.javaweb.rasp.commons.config;
 
-import ch.qos.logback.core.util.FileSize;
+import org.javaweb.rasp.commons.logback.core.util.FileSize;
 
 import java.util.concurrent.TimeUnit;
 
@@ -77,7 +77,7 @@ public class RASPAgentProperties extends RASPProperties {
 			flushInterval = 3;
 		}
 
-		this.proxyIpHeader = configMap.getString(PROXY_IP_HEADER, "x-forwarded-for");
+		this.proxyIpHeader = configMap.getString(PROXY_IP_HEADER);
 		this.logLevel = configMap.getString(LOG_LEVEL);
 		this.version = configMap.getString(VERSION);
 		this.logBufferSize = configMap.getString(LOG_BUFFER_SIZE, DEFAULT_BUFFER_SIZE);

@@ -1,10 +1,10 @@
 package org.javaweb.rasp.commons.log;
 
-import org.slf4j.Logger;
+import org.javaweb.rasp.commons.logback.classic.Logger;
 
 public class RASPLogData {
 
-	private final RASPLog raspLog;
+	private final String raspLog;
 
 	private final Logger logger;
 
@@ -13,13 +13,13 @@ public class RASPLogData {
 	 */
 	private final boolean encrypt;
 
-	public RASPLogData(RASPLog raspLog, Logger logger, boolean encrypt) {
+	public RASPLogData(String raspLog, Logger logger, boolean encrypt) {
 		this.raspLog = raspLog;
 		this.logger = logger;
 		this.encrypt = encrypt;
 	}
 
-	public RASPLog getRaspLog() {
+	public String getRaspLog() {
 		return raspLog;
 	}
 

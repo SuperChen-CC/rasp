@@ -1,5 +1,7 @@
 package org.javaweb.rasp.commons.sync;
 
+import org.javaweb.rasp.commons.RASPAgentEnv;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +18,11 @@ public abstract class RASPThreadSyncConfig {
 	 * 间隔时间
 	 */
 	private long syncInterval;
+
+	/**
+	 * 配置文件绑定的线程对象
+	 */
+	private Thread thread;
 
 	public RASPThreadSyncConfig(long syncInterval, boolean running) {
 		this.syncInterval = syncInterval;
@@ -38,7 +45,7 @@ public abstract class RASPThreadSyncConfig {
 		this.syncInterval = syncInterval;
 	}
 
-	public abstract void dataSynchronization();
+	public abstract void dataSynchronization(RASPAgentEnv agentEnv);
 
 	private final Map<Object, Object> callback = new HashMap<Object, Object>() {
 		@Override
@@ -47,11 +54,19 @@ public abstract class RASPThreadSyncConfig {
 				return isRunning();
 			} else if ("getSyncInterval".equals(key)) {
 				return getSyncInterval();
-			} else if ("dataSynchronization".equals(key)) {
-				dataSynchronization();
+			}
 
-				// 同步时需间隔一定的时间
-				syncInterval();
+			if (key instanceof Object[]) {
+				Object[] args = (Object[]) key;
+
+				if (args.length == 2) {
+					if ("dataSynchronization".equals(args[0])) {
+						dataSynchronization((RASPAgentEnv) args[1]);
+
+						// 同步时需间隔一定的时间
+						syncInterval();
+					}
+				}
 			}
 
 			return null;
@@ -69,6 +84,14 @@ public abstract class RASPThreadSyncConfig {
 
 	public Map<Object, Object> getCallback() {
 		return callback;
+	}
+
+	public void setThread(Thread thread) {
+		this.thread = thread;
+	}
+
+	public Thread getThread() {
+		return thread;
 	}
 
 }

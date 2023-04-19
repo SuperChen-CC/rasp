@@ -50,7 +50,7 @@ public class RASPRuleProperties extends RASPProperties {
 
 	private String dataBinderDisableFieldRegexp;
 
-	private String[] disableMethodClasses;
+	private String disableMethods;
 
 	private final List<Integer> reflectionDisabledMethods = new ArrayList<Integer>();
 
@@ -78,7 +78,7 @@ public class RASPRuleProperties extends RASPProperties {
 		this.disallowedCmdClassName = configMap.getArray(DISALLOWED_CMD_CLASS_NAME);
 		this.disableNewJsp = configMap.getBoolean(DISABLE_NEW_JSP, false);
 		this.dataBinderDisableFieldRegexp = configMap.getString(DATA_BINDER_DISABLE_FIELD_REGEXP);
-		this.disableMethodClasses = configMap.getArray(DISABLE_METHOD_CLASSES);
+		this.disableMethods = configMap.getString(DISABLE_METHODS);
 
 		initReflectionDisabledNativeMethod(configMap);
 	}
@@ -181,8 +181,8 @@ public class RASPRuleProperties extends RASPProperties {
 		return dataBinderDisableFieldRegexp;
 	}
 
-	public String[] getDisableMethodClasses() {
-		return disableMethodClasses;
+	public String getDisableMethods() {
+		return disableMethods;
 	}
 
 	public List<Integer> getReflectionDisabledMethods() {

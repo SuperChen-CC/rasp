@@ -1,15 +1,13 @@
 package org.javaweb.rasp.commons.utils;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
-import static org.apache.commons.codec.binary.Base64.decodeBase64;
-import static org.apache.commons.codec.binary.Base64.encodeBase64;
 import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_ENCODING;
+import static org.javaweb.rasp.commons.utils.Base64.*;
 
 /**
  * 各种常见算法加密解密类
@@ -56,7 +54,11 @@ public class EncryptUtils {
 	 * @throws IOException IO异常
 	 */
 	public static String md5(InputStream in) throws IOException {
-		return DigestUtils.md5Hex(in);
+		try {
+			return DigestUtils.md5Hex(in);
+		} finally {
+			if (in instanceof FileInputStream) IOUtils.closeQuietly(in);
+		}
 	}
 
 	/**
@@ -76,7 +78,7 @@ public class EncryptUtils {
 	 * @return Base64编码后的byte数组
 	 */
 	public static byte[] base64Encode(byte[] bytes) {
-		return encodeBase64(bytes);
+		return getEncoder().encode(bytes);
 	}
 
 	/**
@@ -100,7 +102,7 @@ public class EncryptUtils {
 	 * @return Base64解码后的byte数组
 	 */
 	public static byte[] base64Decode(byte[] bytes) {
-		return decodeBase64(bytes);
+		return getMimeDecoder().decode(bytes);
 	}
 
 	/**
@@ -112,7 +114,7 @@ public class EncryptUtils {
 	 */
 	public static String enContent(String data, String rc4Key) {
 		try {
-			return new String(encodeBase64(RC4Utils.encryptionRC4Byte(data, rc4Key)), DEFAULT_ENCODING);
+			return new String(getEncoder().encode(RC4Utils.encryptionRC4Byte(data, rc4Key)), DEFAULT_ENCODING);
 		} catch (UnsupportedEncodingException e) {
 			return null;
 		}
@@ -121,7 +123,7 @@ public class EncryptUtils {
 	public static String enContent(Object obj, String rc4Key) {
 		try {
 			String json = JsonUtils.toJson(obj);
-			return new String(encodeBase64(RC4Utils.encryptionRC4Byte(json, rc4Key)), DEFAULT_ENCODING);
+			return new String(getEncoder().encode(RC4Utils.encryptionRC4Byte(json, rc4Key)), DEFAULT_ENCODING);
 		} catch (UnsupportedEncodingException e) {
 			return null;
 		}
@@ -136,7 +138,7 @@ public class EncryptUtils {
 	 */
 	public static String deContent(String data, String key) {
 		try {
-			return RC4Utils.decryptionRC4(decodeBase64(data.getBytes(DEFAULT_ENCODING)), key);
+			return RC4Utils.decryptionRC4(getMimeDecoder().decode(data), key);
 		} catch (Exception e) {
 			return null;
 		}

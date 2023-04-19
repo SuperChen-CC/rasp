@@ -1,6 +1,6 @@
 package org.javaweb.rasp.commons.cache;
 
-import org.javaweb.rasp.commons.attack.RASPParameterPosition;
+import org.javaweb.rasp.commons.attack.RASPPosition;
 
 import java.util.Arrays;
 
@@ -14,18 +14,18 @@ public class RASPCachedParameter {
 
 	private String[] lowerCaseValue;
 
-	private RASPParameterPosition raspParameterPosition;
+	private RASPPosition raspPosition;
 
-	public RASPCachedParameter(String key, String value, RASPParameterPosition raspParameterPosition) {
+	public RASPCachedParameter(String key, String value, RASPPosition position) {
 		this.key = key != null ? key : "";
 		this.value = value != null ? new String[]{value} : new String[0];
-		this.raspParameterPosition = raspParameterPosition;
+		this.raspPosition = position;
 	}
 
-	public RASPCachedParameter(String key, String[] value, RASPParameterPosition raspParameterPosition) {
+	public RASPCachedParameter(String key, String[] value, RASPPosition position) {
 		this.key = key != null ? key : "";
 		this.value = value != null ? value : new String[0];
-		this.raspParameterPosition = raspParameterPosition;
+		this.raspPosition = position;
 	}
 
 	public String getKey() {
@@ -58,12 +58,12 @@ public class RASPCachedParameter {
 		return lowerCaseValue;
 	}
 
-	public RASPParameterPosition getRaspAttackPosition() {
-		return raspParameterPosition;
+	public RASPPosition getRaspAttackPosition() {
+		return raspPosition;
 	}
 
-	public void setRaspAttackPosition(RASPParameterPosition raspParameterPosition) {
-		this.raspParameterPosition = raspParameterPosition;
+	public void setRaspAttackPosition(RASPPosition position) {
+		this.raspPosition = position;
 	}
 
 	public boolean containsValue(String value) {
@@ -85,14 +85,14 @@ public class RASPCachedParameter {
 
 		if (!key.equals(that.key)) return false;
 		if (!Arrays.equals(value, that.value)) return false;
-		return raspParameterPosition == that.raspParameterPosition;
+		return raspPosition == that.raspPosition;
 	}
 
 	@Override
 	public int hashCode() {
 		int result = key != null ? key.hashCode() : 0;
 		result = 31 * result + Arrays.hashCode(value);
-		result = 31 * result + (raspParameterPosition != null ? raspParameterPosition.hashCode() : 0);
+		result = 31 * result + (raspPosition != null ? raspPosition.hashCode() : 0);
 		return result;
 	}
 

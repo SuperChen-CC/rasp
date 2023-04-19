@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Map;
 
 import static org.javaweb.rasp.commons.config.RASPConfiguration.RASP_APP_CONFIG_DIRECTORY;
-import static org.javaweb.rasp.commons.config.RASPConfiguration.getWebApplicationConfig;
+import static org.javaweb.rasp.commons.config.RASPConfiguration.getApplicationConfig;
 import static org.javaweb.rasp.commons.constants.RASPAppConstants.DEFAULT_APP_ID;
 import static org.javaweb.rasp.commons.constants.RASPConstants.ATTACK_LOGGER_PREFIX;
-import static org.javaweb.rasp.commons.log.RASPLogger.getLoggerName;
+import static org.javaweb.rasp.commons.log.RASPLogger.createLoggerName;
 import static org.javaweb.rasp.commons.log.RASPLogger.hasLogger;
 import static org.javaweb.rasp.commons.utils.URLUtils.getStandardContextPath;
 
@@ -60,11 +60,11 @@ public class RASPRequestEnv {
 		for (File app : apps) {
 			// 截取web应用名称
 			String appName    = app.getName().substring(0, app.getName().lastIndexOf('.'));
-			String loggerName = getLoggerName(ATTACK_LOGGER_PREFIX, appName);
+			String loggerName = createLoggerName(ATTACK_LOGGER_PREFIX, appName);
 
 			if (hasLogger(loggerName)) {
 				String contextPath = getStandardContextPath(appName);
-				configList.add(getWebApplicationConfig(contextPath));
+				configList.add(getApplicationConfig(contextPath));
 			}
 		}
 

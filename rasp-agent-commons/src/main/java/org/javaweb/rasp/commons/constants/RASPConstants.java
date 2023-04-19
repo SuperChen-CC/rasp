@@ -182,7 +182,7 @@ public class RASPConstants {
 			"(java\\.(security|util)\\.|" +
 			"java\\.lang\\.(invoke|ref|concurrent|instrument)|" +
 			"java\\.lang\\.(Object|String|Shutdown|ThreadLocal|WeakPairMap\\b.*)$|" +
-			"javax\\.crypto|sun\\.(security|misc|net)|" +
+			"javax\\.crypto|sun\\.(security|misc|net\\.www)|" +
 			"org\\.apache\\.commons\\.(io|lang|logging|configuration)\\.|" +
 			"org\\.objectweb\\.asm\\.|com\\.google\\.gson\\.|" +
 			"\\$\\$(FastClassBySpringCGLIB|Lambda|EnhancerBySpringCGLIB)\\$)";

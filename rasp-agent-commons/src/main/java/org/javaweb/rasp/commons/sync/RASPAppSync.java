@@ -1,5 +1,6 @@
 package org.javaweb.rasp.commons.sync;
 
+import org.javaweb.rasp.commons.RASPAgentEnv;
 import org.javaweb.rasp.commons.config.RASPAppProperties;
 import org.javaweb.rasp.commons.config.RASPPropertiesConfiguration;
 
@@ -12,10 +13,10 @@ import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 
 public abstract class RASPAppSync extends RASPCloudSync {
 
-	public abstract void appSync(RASPPropertiesConfiguration<RASPAppProperties> appConfig);
+	public abstract void appSync(RASPPropertiesConfiguration<RASPAppProperties> appConfig, RASPAgentEnv agentEnv);
 
 	@Override
-	public void sync() {
+	public void sync(RASPAgentEnv agentEnv) {
 		List<RASPPropertiesConfiguration<RASPAppProperties>> appConfigList = getAppConfigList();
 
 		for (RASPPropertiesConfiguration<RASPAppProperties> appConfig : appConfigList) {
@@ -26,7 +27,7 @@ public abstract class RASPAppSync extends RASPCloudSync {
 				continue;
 			}
 
-			appSync(appConfig);
+			appSync(appConfig, agentEnv);
 		}
 	}
 

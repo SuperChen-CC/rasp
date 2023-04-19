@@ -13,11 +13,11 @@
  */
 package org.javaweb.rasp.commons.logback;
 
-import ch.qos.logback.core.rolling.RolloverFailure;
-import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
-import ch.qos.logback.core.rolling.TriggeringPolicy;
-import ch.qos.logback.core.rolling.helper.CompressionMode;
-import ch.qos.logback.core.spi.LifeCycle;
+import org.javaweb.rasp.commons.logback.core.rolling.RolloverFailure;
+import org.javaweb.rasp.commons.logback.core.rolling.TimeBasedRollingPolicy;
+import org.javaweb.rasp.commons.logback.core.rolling.TriggeringPolicy;
+import org.javaweb.rasp.commons.logback.core.rolling.helper.CompressionMode;
+import org.javaweb.rasp.commons.logback.core.spi.LifeCycle;
 
 /**
  * A <code>RollingPolicy</code> is responsible for performing the rolling over

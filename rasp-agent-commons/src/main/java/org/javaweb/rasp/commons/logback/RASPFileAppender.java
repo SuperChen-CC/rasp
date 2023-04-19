@@ -13,10 +13,10 @@
  */
 package org.javaweb.rasp.commons.logback;
 
-import ch.qos.logback.core.recovery.ResilientFileOutputStream;
-import ch.qos.logback.core.rolling.RolloverFailure;
-import ch.qos.logback.core.util.ContextUtil;
-import ch.qos.logback.core.util.FileSize;
+import org.javaweb.rasp.commons.logback.core.recovery.ResilientFileOutputStream;
+import org.javaweb.rasp.commons.logback.core.rolling.RolloverFailure;
+import org.javaweb.rasp.commons.logback.core.util.ContextUtil;
+import org.javaweb.rasp.commons.logback.core.util.FileSize;
 import org.javaweb.rasp.commons.utils.FileUtils;
 
 import java.io.File;
@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static ch.qos.logback.core.CoreConstants.*;
-import static ch.qos.logback.core.util.FileUtil.createMissingParentDirectories;
+import static org.javaweb.rasp.commons.logback.core.CoreConstants.*;
+import static org.javaweb.rasp.commons.logback.core.util.FileUtil.createMissingParentDirectories;
 import static org.javaweb.rasp.commons.utils.FileUtils.copyFile;
 
 /**
@@ -130,7 +130,7 @@ public class RASPFileAppender<E> extends RASPOutputStreamAppender<E> {
 				// file should be opened only if collision free
 				try {
 					openFile(getFile());
-				} catch (java.io.IOException e) {
+				} catch (IOException e) {
 					errors++;
 					addError("openFile(" + fileName + "," + append + ") call failed.", e);
 				}

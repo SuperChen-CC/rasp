@@ -1,7 +1,8 @@
 package org.javaweb.rasp.commons;
 
-import org.javaweb.rasp.commons.context.RASPHttpRequestContext;
-import org.javaweb.rasp.commons.context.RASPHttpRequestContextManager;
+import org.javaweb.rasp.commons.context.RASPContext;
+import org.javaweb.rasp.commons.context.RASPRequestContextManager;
+import org.javaweb.rasp.commons.decoder.RASPDataDecoder;
 
 import java.rasp.proxy.loader.HookEvent;
 
@@ -9,26 +10,21 @@ public class MethodHookEvent {
 
 	private final HookEvent hookEvent;
 
-	private RASPHttpRequestContext raspContext;
+	private RASPContext raspContext;
 
-	public MethodHookEvent(HookEvent e) {
+	private final RASPDataDecoder decoder;
+
+	public MethodHookEvent(HookEvent e, RASPDataDecoder decoder) {
 		this.hookEvent = e;
+		this.decoder = decoder;
+	}
+
+	public RASPDataDecoder getDecoder() {
+		return decoder;
 	}
 
 	public Object getThisObject() {
 		return hookEvent.getThisObject();
-	}
-
-	public String getThisClass() {
-		return hookEvent.getThisClass();
-	}
-
-	public String getThisMethodName() {
-		return hookEvent.getThisMethodName();
-	}
-
-	public String getThisMethodArgsDesc() {
-		return hookEvent.getThisMethodArgsDesc();
 	}
 
 	public Object[] getThisArgs() {
@@ -69,12 +65,12 @@ public class MethodHookEvent {
 		return hookEvent.getHookHash();
 	}
 
-	public RASPHttpRequestContext getRASPContext() {
+	public RASPContext getRASPContext() {
 		if (raspContext != null) {
 			return raspContext;
 		}
 
-		return this.raspContext = RASPHttpRequestContextManager.getContext();
+		return this.raspContext = RASPRequestContextManager.getContext();
 	}
 
 	/**

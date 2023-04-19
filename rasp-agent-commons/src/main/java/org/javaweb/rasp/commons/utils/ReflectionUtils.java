@@ -184,12 +184,50 @@ public final class ReflectionUtils {
 		return field;
 	}
 
+	public static Object invokeStaticField(Class<?> clazz, String name)
+			throws NoSuchFieldException, IllegalAccessException {
+
+		Field field = getField(clazz, name);
+
+		return field.get(null);
+	}
+
 	public static Object invokeField(Object instance, String name)
 			throws NoSuchFieldException, IllegalAccessException {
 
 		Field field = getField(instance.getClass(), name);
 
 		return field.get(instance);
+	}
+
+	public static <T> T invokeStaticMethod(Class<?> clazz, String method, Class<?>[] types, Object... args) {
+		try {
+			return invokeStaticMethod(getMethod(clazz, method, types), args);
+		} catch (NoSuchMethodException e) {
+			if (AGENT_LOGGER.isDebugEnabled()) {
+				AGENT_LOGGER.error(AGENT_NAME + "反射调用" + clazz + "#" + method + "异常，该方法不存在！");
+			}
+		}
+
+		return null;
+	}
+
+	public static <T> T invokeStaticMethod(Method method, Object... args) {
+		try {
+			if (method != null) {
+				return (T) method.invoke(null, args);
+			}
+		} catch (Exception e) {
+			if (AGENT_LOGGER.isDebugEnabled()) {
+				AGENT_LOGGER.error(AGENT_NAME + "反射调用" + method + "异常：{}", e);
+			}
+		}
+
+		return null;
+	}
+
+	public static <T> T invokeMethodProxy(Object instance, String name) {
+		return invokeMethodProxy(instance, name, new Class[0]);
 	}
 
 	public static <T> T invokeMethodProxy(Object instance, String name, Class<?>[] argTypes, Object... args) {

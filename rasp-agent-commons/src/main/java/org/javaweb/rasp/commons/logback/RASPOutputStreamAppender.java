@@ -13,19 +13,19 @@
  */
 package org.javaweb.rasp.commons.logback;
 
-import ch.qos.logback.core.Layout;
-import ch.qos.logback.core.UnsynchronizedAppenderBase;
-import ch.qos.logback.core.encoder.Encoder;
-import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
-import ch.qos.logback.core.recovery.ResilientFileOutputStream;
-import ch.qos.logback.core.spi.DeferredProcessingAware;
-import ch.qos.logback.core.status.ErrorStatus;
+import org.javaweb.rasp.commons.logback.core.Layout;
+import org.javaweb.rasp.commons.logback.core.UnsynchronizedAppenderBase;
+import org.javaweb.rasp.commons.logback.core.encoder.Encoder;
+import org.javaweb.rasp.commons.logback.core.encoder.LayoutWrappingEncoder;
+import org.javaweb.rasp.commons.logback.core.recovery.ResilientFileOutputStream;
+import org.javaweb.rasp.commons.logback.core.spi.DeferredProcessingAware;
+import org.javaweb.rasp.commons.logback.core.status.ErrorStatus;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static ch.qos.logback.core.CoreConstants.CODES_URL;
+import static org.javaweb.rasp.commons.logback.core.CoreConstants.CODES_URL;
 
 /**
  * OutputStreamAppender appends events to a OutputStream. This class provides basic services that other appenders build upon. For more information about this appender, please refer to the online manual at http://logback.qos.ch/manual/appenders.html#OutputStreamAppender

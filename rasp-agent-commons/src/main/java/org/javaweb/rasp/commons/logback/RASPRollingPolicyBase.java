@@ -13,9 +13,9 @@
  */
 package org.javaweb.rasp.commons.logback;
 
-import ch.qos.logback.core.rolling.helper.CompressionMode;
-import ch.qos.logback.core.rolling.helper.FileNamePattern;
-import ch.qos.logback.core.spi.ContextAwareBase;
+import org.javaweb.rasp.commons.logback.core.rolling.helper.CompressionMode;
+import org.javaweb.rasp.commons.logback.core.rolling.helper.FileNamePattern;
+import org.javaweb.rasp.commons.logback.core.spi.ContextAwareBase;
 
 /**
  * Implements methods common to most, it not all, rolling policies. Currently

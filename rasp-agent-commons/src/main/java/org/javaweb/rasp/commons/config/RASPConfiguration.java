@@ -1,9 +1,9 @@
 package org.javaweb.rasp.commons.config;
 
-import ch.qos.logback.classic.Level;
 import org.javaweb.rasp.commons.RASPVersion;
-import org.javaweb.rasp.commons.context.RASPHttpRequestContext;
-import org.slf4j.Logger;
+import org.javaweb.rasp.commons.context.RASPContext;
+import org.javaweb.rasp.commons.logback.classic.Level;
+import org.javaweb.rasp.commons.logback.classic.Logger;
 
 import java.io.File;
 import java.util.Map;
@@ -14,8 +14,6 @@ import static org.javaweb.rasp.commons.constants.RASPConstants.*;
 import static org.javaweb.rasp.commons.log.RASPLogger.createRASPLogger;
 import static org.javaweb.rasp.commons.utils.ClassUtils.getPropertiesMap;
 import static org.javaweb.rasp.commons.utils.FileUtils.copyFile;
-import static org.javaweb.rasp.commons.utils.StringUtils.countOf;
-import static org.javaweb.rasp.commons.utils.StringUtils.replaceFirstChar;
 import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 
 /**
@@ -198,21 +196,15 @@ public class RASPConfiguration {
 	}
 
 	/**
-	 * 获取Web应用配置文件对象，第一次获取时会初始化Web应用日志对象
+	 * 获取Web应用配置文件对象，先从内存中读取（使用contextPath的hashcode缓存），如果读取不到再读取配置文件；
+	 * 第一次读取时会初始化Web应用日志对象。
 	 *
 	 * @param ctx RASP上下文
 	 * @return Web应用配置文件对象
 	 */
-	public static RASPPropertiesConfiguration<RASPAppProperties> getWebApplicationConfig(RASPHttpRequestContext ctx) {
+	public static RASPPropertiesConfiguration<RASPAppProperties> getApplicationConfig(RASPContext ctx) {
 		String contextPath = ctx.getContextPath();
-
-		// 处理contextPath为多级目录的情况，比如：/ibm/test/
-		if (countOf(contextPath, '/') > 1) {
-			// 替换/ibm/test/为/ibm_test/
-			contextPath = replaceFirstChar(contextPath.replace("/", "_"), '/');
-		}
-
-		int hashCode = contextPath.hashCode();
+		int    hashCode    = contextPath.hashCode();
 
 		// 获取缓存中的Web应用配置
 		RASPPropertiesConfiguration<RASPAppProperties> config = APPLICATION_CONFIG_MAP.get(hashCode);
@@ -225,30 +217,21 @@ public class RASPConfiguration {
 		ctx.initAppLogger();
 
 		// 获取Web应用配置
-		return getWebApplicationConfig(contextPath);
+		config = readApplicationConfigFile(contextPath);
+
+		APPLICATION_CONFIG_MAP.put(hashCode, config);
+
+		return config;
 	}
 
-	/**
-	 * 获取Web应用配置文件
-	 *
-	 * @param contextPath 标准的contextPath
-	 * @return Web应用配置文件对象
-	 */
-	public static RASPPropertiesConfiguration<RASPAppProperties> getWebApplicationConfig(String contextPath) {
-		int hashCode = contextPath.hashCode();
-
-		// 获取缓存中的Web应用配置
-		RASPPropertiesConfiguration<RASPAppProperties> config = APPLICATION_CONFIG_MAP.get(hashCode);
-
-		if (config != null) return config;
-
-		String filename = contextPath + ".properties";
-
-		if (filename.startsWith("/")) {
-			filename = filename.substring(1).replace("/", "_");
+	public static RASPPropertiesConfiguration<RASPAppProperties> readApplicationConfigFile(String contextPath) {
+		// 替换contextPath的"/"为"_"
+		if (contextPath.startsWith("/")) {
+			contextPath = contextPath.substring(1).replace("/", "_");
 		}
 
-		File configFile = new File(RASP_APP_CONFIG_DIRECTORY, filename);
+		String filename   = contextPath + ".properties";
+		File   configFile = new File(RASP_APP_CONFIG_DIRECTORY, filename);
 
 		try {
 			if (!DEFAULT_CONFIG_FILE.exists()) {
@@ -269,18 +252,34 @@ public class RASPConfiguration {
 			String configRelativePath = new File(RASP_APP_CONFIG_DIRECTORY.getName(), filename).getPath();
 
 			// 加载配置文件
-			RASPPropertiesConfiguration<RASPAppProperties> configuration = loadConfig(
-					configRelativePath, RASPAppProperties.class
-			);
-
-			APPLICATION_CONFIG_MAP.put(hashCode, configuration);
-
-			return configuration;
+			return loadConfig(configRelativePath, RASPAppProperties.class);
 		} catch (Exception e) {
 			AGENT_LOGGER.error(AGENT_NAME + "读取" + contextPath + "配置文件[" + configFile + "]异常: ", e);
 
 			throw new RuntimeException();
 		}
+	}
+
+	/**
+	 * 获取Web应用配置文件
+	 *
+	 * @param contextPath 标准的contextPath
+	 * @return Web应用配置文件对象
+	 */
+	public static RASPPropertiesConfiguration<RASPAppProperties> getApplicationConfig(String contextPath) {
+		// contextPath可能有多层目录的时（如："/ibm/console"）替换"_"后需要还原
+		String[] resolvePaths = new String[]{contextPath, contextPath.replace("_", "/")};
+
+		for (String resolvePath : resolvePaths) {
+			int hashCode = resolvePath.hashCode();
+
+			// 获取缓存中的Web应用配置
+			RASPPropertiesConfiguration<RASPAppProperties> config = APPLICATION_CONFIG_MAP.get(hashCode);
+
+			if (config != null) return config;
+		}
+
+		return readApplicationConfigFile(contextPath);
 	}
 
 }

@@ -94,9 +94,4 @@ public @interface RASPMethodHook {
 	 */
 	boolean methodDescRegexp() default false;
 
-	/**
-	 * 设置Hook调用时生成的hashcode中是否需要添加类名条件
-	 */
-	boolean classNameHash() default false;
-
 }

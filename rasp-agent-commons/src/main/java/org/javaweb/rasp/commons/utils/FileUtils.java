@@ -6,6 +6,7 @@ import java.util.List;
 
 import static java.io.File.*;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.RASP_DIRECTORY;
+import static org.javaweb.rasp.commons.utils.IOUtils.closeQuietly;
 import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 
 public class FileUtils {
@@ -85,8 +86,7 @@ public class FileUtils {
 		for (int i = 0; i < n; i++) {
 			char c = pathname.charAt(i);
 
-			if ((prevChar == '/') && (c == '/'))
-				return unixNormalize(pathname, n, i - 1);
+			if ((prevChar == '/') && (c == '/')) return unixNormalize(pathname, n, i - 1);
 			prevChar = c;
 		}
 
@@ -215,12 +215,9 @@ public class FileUtils {
 		for (int i = 0; i < n; i++) {
 			char c = path.charAt(i);
 
-			if (c == pathSeparatorChar)
-				return winNormalize(path, n, (prev == slash) ? i - 1 : i);
-			if ((c == slash) && (prev == slash) && (i > 1))
-				return winNormalize(path, n, i - 1);
-			if ((c == ':') && (i > 1))
-				return winNormalize(path, n, 0);
+			if (c == pathSeparatorChar) return winNormalize(path, n, (prev == slash) ? i - 1 : i);
+			if ((c == slash) && (prev == slash) && (i > 1)) return winNormalize(path, n, i - 1);
+			if ((c == ':') && (i > 1)) return winNormalize(path, n, 0);
 
 			prev = c;
 		}
@@ -303,7 +300,7 @@ public class FileUtils {
 					fos.close();
 				}
 			} finally {
-				if (br != null) IOUtils.closeQuietly(br);
+				if (br != null) closeQuietly(br);
 			}
 		} else {
 			fileList.add(targetFile);
@@ -315,23 +312,20 @@ public class FileUtils {
 	public static List<File> listFiles(File directory, String[] extensions, boolean recursive) {
 		List<File> fileList = new ArrayList<File>();
 
-		listDir(directory, extensions, fileList, recursive);
+		listFiles(directory, extensions, fileList, recursive);
 
 		return fileList;
 	}
 
-	private static void listDir(File dir, final String[] extensions, List<File> fileList, boolean recursive) {
-		if (dir == null || extensions == null || fileList == null) return;
-
-		if (dir.isFile()) {
-			throw new RuntimeException(dir.getAbsolutePath() + " is not a file!");
-		}
-
-		File[] files = dir.listFiles(new FileFilter() {
+	public static void listFiles(File directory, final String[] extensions, List<File> fileList, boolean recursive) {
+		File[] files = directory.listFiles(new FileFilter() {
 			@Override
-			public boolean accept(File name) {
-				for (String extension : extensions) {
-					if (name.getName().endsWith("." + extension)) return true;
+			public boolean accept(File file) {
+				if (file.isDirectory()) return true;
+				String fileName = file.getName();
+
+				for (String ext : extensions) {
+					return fileName.endsWith("." + ext);
 				}
 
 				return false;
@@ -341,28 +335,52 @@ public class FileUtils {
 		if (files == null) return;
 
 		for (File file : files) {
-			if (file.isDirectory() && recursive) {
-				listDir(dir, extensions, fileList, recursive);
-			} else {
+			if (file.isFile()) {
 				fileList.add(file);
+				continue;
+			}
+
+			// 处理目录递归
+			if (recursive) {
+				listFiles(file, extensions, fileList, true);
 			}
 		}
 	}
 
 	public static List<String> readLines(File file, String encoding) throws IOException {
+		return readLines(file, encoding, -1);
+	}
+
+	public static String readLine(File file, String encoding) throws IOException {
+		List<String> lines = readLines(file, encoding, 1);
+
+		if (lines.size() > 0) {
+			return lines.get(0);
+		}
+
+		return null;
+	}
+
+	public static List<String> readLines(File file, String encoding, int maxLine) throws IOException {
 		String         line;
-		List<String>   lines;
-		BufferedReader br = null;
+		BufferedReader br    = null;
+		List<String>   lines = new ArrayList<String>();
 
 		try {
+			int idx = 0;
 			br = new BufferedReader(new InputStreamReader(new FileInputStream(file), encoding));
-			lines = new ArrayList<String>();
 
 			while ((line = br.readLine()) != null) {
+				idx++;
+
+				if (maxLine > 0 && idx > maxLine) {
+					break;
+				}
+
 				lines.add(line);
 			}
 		} finally {
-			if (br != null) br.close();
+			closeQuietly(br);
 		}
 
 		return lines;
@@ -446,10 +464,12 @@ public class FileUtils {
 
 			return baos.toByteArray();
 		} finally {
-			if (fis != null) {
-				fis.close();
-			}
+			IOUtils.closeQuietly(fis);
 		}
+	}
+
+	public static String getTempDir() {
+		return System.getProperty("java.io.tmpdir");
 	}
 
 }

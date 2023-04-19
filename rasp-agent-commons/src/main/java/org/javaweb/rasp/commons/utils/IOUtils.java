@@ -1,6 +1,7 @@
 package org.javaweb.rasp.commons.utils;
 
 import java.io.*;
+import java.util.zip.GZIPOutputStream;
 
 public class IOUtils {
 
@@ -37,6 +38,26 @@ public class IOUtils {
 		copy(input, output);
 
 		return output.toByteArray();
+	}
+
+	public static byte[] covertGZipBytes(InputStream in) throws IOException {
+		if (in != null) {
+			int                   a;
+			byte[]                bytes = new byte[1024];
+			ByteArrayOutputStream out   = new ByteArrayOutputStream();
+			GZIPOutputStream      gout  = new GZIPOutputStream(out);
+
+			while ((a = in.read(bytes)) != -1) {
+				gout.write(bytes, 0, a);
+			}
+
+			gout.finish();
+			gout.close();
+
+			return out.toByteArray();
+		}
+
+		return null;
 	}
 
 	public static String toString(InputStream in) throws IOException {

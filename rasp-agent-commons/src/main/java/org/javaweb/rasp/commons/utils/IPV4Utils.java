@@ -265,7 +265,6 @@ public class IPV4Utils {
 		return address;
 	}
 
-
 	public static boolean isIPV4SiteLocalAddress(long address) {
 		// refer to RFC 1918
 		// 10/8 prefix

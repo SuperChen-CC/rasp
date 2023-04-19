@@ -110,7 +110,7 @@ public class RASPRuleConstants {
 	/**
 	 * 配置disable_method模块的类方法黑名单
 	 */
-	public static final String DISABLE_METHOD_CLASSES = "disable_method_classes";
+	public static final String DISABLE_METHODS = "disable_methods";
 
 	/**
 	 * 配置是否禁止使用反射调用native方法

@@ -3,13 +3,16 @@ package org.javaweb.rasp.commons.utils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static org.javaweb.rasp.commons.utils.IOUtils.closeQuietly;
+import static org.javaweb.rasp.commons.utils.IOUtils.toByteArray;
 
 /**
  * Created by yz on 2016-05-27.
@@ -46,6 +49,16 @@ public class ClassUtils {
 		return className != null ? className.replace("/", ".") : null;
 	}
 
+	public static String getDescriptor(final String desc) {
+		if (desc == null) return null;
+
+		if (desc.contains("(") && desc.contains(")")) {
+			return desc.substring(1, desc.indexOf(")"));
+		}
+
+		return desc;
+	}
+
 	/**
 	 * 获取参数描述符,接收参数类型的全类名，如果是参数是数组类型的那么直接在类型后面加上一对"[]"就可以了,
 	 * 如"java.lang.String[]",如果是基础类型直接写就行了，如参数类型是int,那么直接传入:"int"就行了。
@@ -58,6 +71,9 @@ public class ClassUtils {
 		StringBuilder sb = new StringBuilder();
 
 		for (String name : classes) {
+			// 替换掉多余的空白符
+			name = name.replaceAll("\\s+", "");
+
 			// 统计数组[]出现次数
 			int length = name.split("\\[]", -1).length;
 
@@ -153,6 +169,21 @@ public class ClassUtils {
 		return buf.toString();
 	}
 
+	public static Map<String, String> loadProperties(File file) throws IOException {
+		FileInputStream fis = null;
+
+		try {
+			fis = new FileInputStream(file);
+			Properties p = new Properties();
+			p.load(fis);
+
+			return propertiesToMap(p);
+		} finally {
+			if (fis != null)
+				closeQuietly(fis);
+		}
+	}
+
 	/**
 	 * Properties文件转Map对象
 	 *
@@ -202,6 +233,45 @@ public class ClassUtils {
 		}
 
 		return null;
+	}
+
+	public static byte[] getClassBytes(Class<?> clazz) {
+		return getClassBytes(clazz.getName(), clazz.getClassLoader());
+	}
+
+	/**
+	 * 查找类对象，获取类字节码
+	 *
+	 * @param className   类名
+	 * @param classLoader 类加载器
+	 * @return 类字节码数组
+	 */
+	public static byte[] getClassBytes(String className, ClassLoader classLoader) {
+		InputStream in = null;
+
+		try {
+			if (className.startsWith("[")) {
+				return null;
+			}
+
+			String classRes = toAsmClassName(className) + ".class";
+
+			in = getSystemResourceAsStream(classRes);
+
+			if (classLoader != null && in == null) {
+				in = classLoader.getResourceAsStream(classRes);
+			}
+
+			if (in != null) {
+				return toByteArray(in);
+			}
+
+			return null;
+		} catch (IOException e) {
+			return null;
+		} finally {
+			closeQuietly(in);
+		}
 	}
 
 }

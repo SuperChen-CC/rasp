@@ -1,7 +1,7 @@
 package org.javaweb.rasp.commons.utils;
 
 import static java.lang.System.arraycopy;
-import static org.javaweb.rasp.commons.utils.StringUtils.replace;
+import static org.javaweb.rasp.commons.utils.StringUtils.*;
 
 public final class URLUtils {
 
@@ -170,13 +170,11 @@ public final class URLUtils {
 			return null;
 		}
 
-		if (url.contains("\\")) {
-			// 替换'\'为'/'
-			url = replace(url, "\\", "/");
-		}
+		// 替换'\'为'/'
+		url = url.replace('\\', '/');
 
-		// Does this path need normalization?
-		int ns = needsNormalization(url);        // Number of segments
+		// Does this path need normalization? Number of segments
+		int ns = needsNormalization(url);
 
 		if (ns < 0) {
 			if (url.endsWith("/")) {
@@ -437,11 +435,11 @@ public final class URLUtils {
 	 * @return 标准化处理后的ContextPath
 	 */
 	public static String getStandardContextPath(String contextPath) {
-		if (contextPath == null || "".equals(contextPath)) {
+		// ROOT的context是""，所以还原成ROOT
+		if (isEmpty(contextPath)) {
 			return "/ROOT";
 		}
 
-		// ROOT的context是""，所以还原成ROOT
 		return appendFirstSlash(contextPath);
 	}
 

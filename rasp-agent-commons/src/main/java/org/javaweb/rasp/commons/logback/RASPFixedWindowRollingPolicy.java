@@ -13,13 +13,13 @@
  */
 package org.javaweb.rasp.commons.logback;
 
-import ch.qos.logback.core.rolling.RolloverFailure;
-import ch.qos.logback.core.rolling.helper.FileNamePattern;
-import ch.qos.logback.core.rolling.helper.RenameUtil;
+import org.javaweb.rasp.commons.logback.core.rolling.RolloverFailure;
+import org.javaweb.rasp.commons.logback.core.rolling.helper.FileNamePattern;
+import org.javaweb.rasp.commons.logback.core.rolling.helper.RenameUtil;
 
 import java.util.Date;
 
-import static ch.qos.logback.core.CoreConstants.SEE_FNP_NOT_SET;
+import static org.javaweb.rasp.commons.logback.core.CoreConstants.SEE_FNP_NOT_SET;
 
 /**
  * When rolling over, <code>FixedWindowRollingPolicy</code> renames files

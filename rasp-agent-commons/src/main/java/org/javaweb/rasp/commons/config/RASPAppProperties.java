@@ -1,12 +1,10 @@
 package org.javaweb.rasp.commons.config;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.javaweb.rasp.commons.constants.RASPAppConstants.*;
 import static org.javaweb.rasp.commons.utils.EncryptUtils.base64Decode;
-import static org.javaweb.rasp.commons.utils.JsonUtils.toJsonSetMap;
+import static org.javaweb.rasp.commons.utils.JsonUtils.toJsonList;
 import static org.javaweb.rasp.commons.utils.URLUtils.appendFirstSlash;
 import static org.javaweb.rasp.commons.utils.URLUtils.urlNormalize;
 
@@ -60,7 +58,7 @@ public class RASPAppProperties extends RASPProperties {
 	/**
 	 * 补丁列表
 	 */
-	private Set<Map<String, Object>> patchList = new HashSet<Map<String, Object>>();
+	private List<Map<String, Object>> patchList = new ArrayList<Map<String, Object>>();
 
 	/**
 	 * 是否启用Servlet输入输出流Hook
@@ -99,7 +97,7 @@ public class RASPAppProperties extends RASPProperties {
 
 		// W10=表示[]，空
 		if (whitelistStr != null && !"W10=".equals(whitelistStr)) {
-			Set<Map<String, Object>> setMap = toJsonSetMap(base64Decode(whitelistStr));
+			List<Map<String, Object>> setMap = toJsonList(base64Decode(whitelistStr));
 
 			int index = 0;
 			whitelist = new String[setMap.size()];
@@ -113,7 +111,7 @@ public class RASPAppProperties extends RASPProperties {
 
 		// W10=表示[]，空
 		if (patchListStr != null && !"W10=".equals(patchListStr)) {
-			this.patchList = toJsonSetMap(base64Decode(patchListStr));
+			this.patchList = toJsonList(base64Decode(patchListStr));
 		}
 
 		// URL黑名单预处理（URL标准化）
@@ -161,7 +159,7 @@ public class RASPAppProperties extends RASPProperties {
 		return whitelist;
 	}
 
-	public Set<Map<String, Object>> getPatchList() {
+	public List<Map<String, Object>> getPatchList() {
 		return patchList;
 	}
 

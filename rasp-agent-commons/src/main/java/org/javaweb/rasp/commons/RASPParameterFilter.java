@@ -1,7 +1,7 @@
 package org.javaweb.rasp.commons;
 
 import org.javaweb.rasp.commons.cache.RASPCachedParameter;
-import org.javaweb.rasp.commons.context.RASPHttpRequestContext;
+import org.javaweb.rasp.commons.context.RASPContext;
 
 import java.rasp.proxy.loader.HookResult;
 
@@ -11,6 +11,6 @@ import java.rasp.proxy.loader.HookResult;
  */
 public interface RASPParameterFilter {
 
-	HookResult<String[]> filter(RASPCachedParameter parameter, RASPHttpRequestContext context);
+	HookResult<String[]> filter(RASPCachedParameter parameter, RASPContext context);
 
 }
