@@ -40,7 +40,15 @@ public class RASPContextBuilder {
 
 	private static RASPContext createAdapter(MethodHookEvent event, RASPCallback<RASPContext> callback) {
 		try {
-			ClassLoader loader = event.getThisObject().getClass().getClassLoader();
+			Object      thisObject = event.getThisObject();
+			ClassLoader loader;
+
+			// 静态方法没有this对象，传入的是该类的Class对象
+			if (thisObject instanceof Class) {
+				loader = ((Class<?>) thisObject).getClassLoader();
+			} else {
+				loader = thisObject.getClass().getClassLoader();
+			}
 
 			// 创建RASP上下文
 			RASPContext context = callback.callback(event);
