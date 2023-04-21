@@ -17,7 +17,9 @@ import java.io.Closeable;
 import java.io.File;
 import java.rasp.proxy.loader.RASPModuleType;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.System.nanoTime;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.*;
@@ -31,6 +33,11 @@ import static org.javaweb.rasp.commons.utils.URLUtils.getStandardContextPath;
 import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 
 public abstract class RASPContext implements Closeable {
+
+	/**
+	 * RASP 缓存的属性对象
+	 */
+	protected final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
 
 	/**
 	 * 静默模式
@@ -115,6 +122,18 @@ public abstract class RASPContext implements Closeable {
 		this.appProperties = applicationConfig.getRaspProperties();
 		this.silent = appProperties.isSilent();
 		this.moduleDefense = appProperties.isModuleDefense();
+	}
+
+	public Object setAttribute(String name, Object value) {
+		return attributes.put(name, value);
+	}
+
+	public Object getAttribute(String name) {
+		return attributes.get(name);
+	}
+
+	public Map<String, Object> getAttributes() {
+		return attributes;
 	}
 
 	public abstract String getRequestIP();
