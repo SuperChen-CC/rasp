@@ -262,7 +262,7 @@ public class Document extends Element {
     
     /**
      * Sets the charset used in this document. This method is equivalent
-     * to {@link OutputSettings#charset(Charset)
+     * to {@link OutputSettings#charset(java.nio.charset.Charset)
      * OutputSettings.charset(Charset)} but in addition it updates the
      * charset / encoding element within the document.
      * 
@@ -282,7 +282,7 @@ public class Document extends Element {
      * @param charset Charset
      * 
      * @see #updateMetaCharsetElement(boolean) 
-     * @see OutputSettings#charset(Charset)
+     * @see OutputSettings#charset(java.nio.charset.Charset) 
      */
     public void charset(Charset charset) {
         updateMetaCharsetElement(true);
@@ -304,7 +304,7 @@ public class Document extends Element {
     
     /**
      * Sets whether the element with charset information in this document is
-     * updated on changes through {@link #charset(Charset)
+     * updated on changes through {@link #charset(java.nio.charset.Charset)
      * Document.charset(Charset)} or not.
      * 
      * <p>If set to <tt>false</tt> <i>(default)</i> there are no elements
@@ -313,7 +313,7 @@ public class Document extends Element {
      * @param update If <tt>true</tt> the element updated on charset
      * changes, <tt>false</tt> if not
      * 
-     * @see #charset(Charset)
+     * @see #charset(java.nio.charset.Charset) 
      */
     public void updateMetaCharsetElement(boolean update) {
         this.updateMetaCharset = update;
@@ -321,7 +321,7 @@ public class Document extends Element {
     
     /**
      * Returns whether the element with charset information in this document is
-     * updated on changes through {@link #charset(Charset)
+     * updated on changes through {@link #charset(java.nio.charset.Charset)
      * Document.charset(Charset)} or not.
      * 
      * @return Returns <tt>true</tt> if the element is updated on charset

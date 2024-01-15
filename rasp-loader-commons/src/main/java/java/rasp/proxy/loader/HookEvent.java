@@ -5,24 +5,9 @@ import java.util.Arrays;
 public class HookEvent {
 
 	/**
-	 * Hook类示例化对象，如果是static方法该值恒为空
+	 * Hook类示例化对象，如果是static方法该值为该类类名
 	 */
 	private final Object thisObject;
-
-	/**
-	 * Hook类名
-	 */
-	private final String thisClass;
-
-	/**
-	 * Hook类方法名
-	 */
-	private final String thisMethodName;
-
-	/**
-	 * Hook类方法描述符
-	 */
-	private final String thisMethodArgsDesc;
 
 	/**
 	 * Hook类方法参数
@@ -44,33 +29,27 @@ public class HookEvent {
 	 */
 	private final int hookHash;
 
-	public HookEvent(Object thisObject, String thisClass, String thisMethodName, String thisMethodArgsDesc,
-	                 Object[] thisArgs, Object thisReturnValue, int thisMethodEvent, int hookHash) {
+	private final String className;
+
+	private final String methodName;
+
+	private final String methodDesc;
+
+	public HookEvent(Object thisObject, Object[] thisArgs, Object thisReturnValue, int thisMethodEvent,
+	                 int hookHash, String className, String methodName, String methodDesc) {
 
 		this.thisObject = thisObject;
-		this.thisClass = thisClass;
-		this.thisMethodName = thisMethodName;
-		this.thisMethodArgsDesc = thisMethodArgsDesc;
 		this.thisArgs = thisArgs;
 		this.thisReturnValue = thisReturnValue;
 		this.thisMethodEvent = thisMethodEvent;
 		this.hookHash = hookHash;
+		this.className = className;
+		this.methodName = methodName;
+		this.methodDesc = methodDesc;
 	}
 
 	public Object getThisObject() {
 		return thisObject;
-	}
-
-	public String getThisClass() {
-		return thisClass;
-	}
-
-	public String getThisMethodName() {
-		return thisMethodName;
-	}
-
-	public String getThisMethodArgsDesc() {
-		return thisMethodArgsDesc;
 	}
 
 	public Object[] getThisArgs() {
@@ -109,6 +88,18 @@ public class HookEvent {
 		return hookHash;
 	}
 
+	public String getClassName() {
+		return className;
+	}
+
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public String getMethodDesc() {
+		return methodDesc;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -142,14 +133,13 @@ public class HookEvent {
 	public String toString() {
 		return "HookEvent{" +
 				"thisObject=" + thisObject +
-				", thisClass='" + thisClass + '\'' +
-				", thisMethodName='" + thisMethodName + '\'' +
-				", thisMethodArgsDesc='" + thisMethodArgsDesc + '\'' +
 				", thisArgs=" + Arrays.toString(thisArgs) +
 				", thisReturnValue=" + thisReturnValue +
 				", thisMethodEvent=" + thisMethodEvent +
 				", hookHash=" + hookHash +
+				", className='" + className + '\'' +
+				", methodName='" + methodName + '\'' +
+				", methodDesc='" + methodDesc + '\'' +
 				'}';
 	}
-
 }

@@ -170,8 +170,10 @@ public final class URLUtils {
 			return null;
 		}
 
-		// 替换'\'为'/'
-		url = url.replace('\\', '/');
+		if (url.contains("\\")) {
+			// 替换'\'为'/'
+			url = url.replace('\\', '/');
+		}
 
 		// Does this path need normalization? Number of segments
 		int ns = needsNormalization(url);

@@ -52,7 +52,7 @@ public class RuntimeSupport {
      */
     public static void find2Methods(Class<?> clazz, String superMethod,
                                     String thisMethod, int index,
-                                    String desc, Method[] methods)
+                                    String desc, java.lang.reflect.Method[] methods)
     {
         methods[index + 1] = thisMethod == null ? null
                                                 : findMethod(clazz, thisMethod, desc);
@@ -72,7 +72,7 @@ public class RuntimeSupport {
     @Deprecated
     public static void find2Methods(Object self, String superMethod,
                                     String thisMethod, int index,
-                                    String desc, Method[] methods)
+                                    String desc, java.lang.reflect.Method[] methods)
     {
         methods[index + 1] = thisMethod == null ? null
                                                 : findMethod(self, thisMethod, desc);

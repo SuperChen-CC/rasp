@@ -15,12 +15,14 @@
  */
 package org.javaweb.rasp.commons.utils;
 
+import org.javaweb.rasp.commons.lru.ConcurrentLinkedHashMap;
+
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_CACHE_COUNT;
 import static org.javaweb.rasp.commons.utils.StringUtils.*;
 
 /**
@@ -87,9 +89,11 @@ public class AntPathMatcherUtils {
 
 	private volatile Boolean cachePatterns;
 
-	private final Map<String, String[]> tokenizedPatternCache = new ConcurrentHashMap<String, String[]>(256);
+	private final Map<String, String[]> tokenizedPatternCache =  new ConcurrentLinkedHashMap
+			.Builder<String, String[]>().maximumWeightedCapacity(DEFAULT_CACHE_COUNT).build();
 
-	private final Map<String, AntPathStringMatcher> stringMatcherCache = new ConcurrentHashMap<String, AntPathStringMatcher>(256);
+	private final Map<String, AntPathStringMatcher> stringMatcherCache =  new ConcurrentLinkedHashMap
+			.Builder<String, AntPathStringMatcher>().maximumWeightedCapacity(DEFAULT_CACHE_COUNT).build();
 
 	/**
 	 * Create a new instance with the {@link #DEFAULT_PATH_SEPARATOR}.
@@ -652,7 +656,7 @@ public class AntPathMatcherUtils {
 	/**
 	 * Given a full path, returns a {@link Comparator} suitable for sorting patterns in order of
 	 * explicitness.
-	 * <p>This {@code Comparator} will {@linkplain List#sort(Comparator) sort}
+	 * <p>This {@code Comparator} will {@linkplain java.util.List#sort(Comparator) sort}
 	 * a list so that more specific patterns (without URI templates or wild cards) come before
 	 * generic patterns. So given a list with the following patterns, the returned comparator
 	 * will sort this list so that the order will be as indicated.

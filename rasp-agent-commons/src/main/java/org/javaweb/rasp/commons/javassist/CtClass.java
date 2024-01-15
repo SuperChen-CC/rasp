@@ -1372,7 +1372,7 @@ public abstract class CtClass {
      * @param domain        the protection domain that the class belongs to.
      *                      If it is null, the default domain created
      *                      by <code>java.lang.ClassLoader</code> is used.
-     * @see ClassPool#toClass(CtClass, ClassLoader)
+     * @see ClassPool#toClass(CtClass,java.lang.ClassLoader)
      * @since 3.3
      */
     public Class<?> toClass(ClassLoader loader, ProtectionDomain domain)

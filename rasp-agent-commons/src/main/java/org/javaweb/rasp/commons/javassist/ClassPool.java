@@ -1045,7 +1045,7 @@ public class ClassPool {
      * protection domain is not specified.</p>
      *
      * @see #toClass(CtClass,Class)
-     * @see #toClass(CtClass,Class, ClassLoader,ProtectionDomain)
+     * @see #toClass(CtClass,Class,java.lang.ClassLoader,ProtectionDomain)
      * @see #getClassLoader()
      */
     public Class toClass(CtClass clazz) throws CannotCompileException {

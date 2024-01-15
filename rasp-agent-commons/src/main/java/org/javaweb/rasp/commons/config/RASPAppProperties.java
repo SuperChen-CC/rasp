@@ -1,6 +1,8 @@
 package org.javaweb.rasp.commons.config;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static org.javaweb.rasp.commons.constants.RASPAppConstants.*;
 import static org.javaweb.rasp.commons.utils.EncryptUtils.base64Decode;
@@ -24,6 +26,11 @@ public class RASPAppProperties extends RASPProperties {
 	 * 是否是静默模式: true、false
 	 */
 	private boolean silent;
+
+	/**
+	 * 是否防御RASP检测到的漏洞，默认不防御只记录日志
+	 */
+	private boolean defenseVul;
 
 	/**
 	 * RASP模块检测熔断时间（毫秒）, <=0 表示不限制
@@ -56,6 +63,11 @@ public class RASPAppProperties extends RASPProperties {
 	private String[] whitelist;
 
 	/**
+	 * 白名单 攻击类型
+	 */
+	private String[] whiteAttackType;
+
+	/**
 	 * 补丁列表
 	 */
 	private List<Map<String, Object>> patchList = new ArrayList<Map<String, Object>>();
@@ -69,6 +81,11 @@ public class RASPAppProperties extends RASPProperties {
 	 * 最大缓存的Servlet输入输出流大小，默认10MB
 	 */
 	private int servletStreamMaxCacheSize;
+
+	/**
+	 * IP白名单列表
+	 */
+	private String[] ipWhitelist;
 
 	public void reloadConfig(RASPConfigMap<String, Object> configMap) {
 		super.reloadConfig(configMap);
@@ -84,16 +101,19 @@ public class RASPAppProperties extends RASPProperties {
 
 		this.moduleDefense = configMap.getBoolean(MODULE_DEFENSE, true);
 		this.silent = configMap.getBoolean(SILENT, false);
+		this.defenseVul = configMap.getBoolean(DEFENSE_AGAINST_VUL, false);
 		this.raspProcessTimeout = configMap.getInt(RASP_PROCESS_TIMEOUT, 0);
 		this.ipBlacklist = configMap.getArray(IP_BLACKLIST);
 		this.urlBlacklist = configMap.getArray(URL_BLACKLIST);
 		this.headerWhitelist = configMap.getArray(HEADER_WHITELIST);
+		this.ipWhitelist = configMap.getArray(IP_WHITELIST);
 
 		String whitelistStr = configMap.getString(WHITELIST);
 		String patchListStr = configMap.getString(PATCH_LIST);
 
 		this.patchList.clear();
 		whitelist = new String[0];
+		whiteAttackType = new String[0];
 
 		// W10=表示[]，空
 		if (whitelistStr != null && !"W10=".equals(whitelistStr)) {
@@ -101,11 +121,15 @@ public class RASPAppProperties extends RASPProperties {
 
 			int index = 0;
 			whitelist = new String[setMap.size()];
+			whiteAttackType = new String[setMap.size()];
 
 			// 白名单URL预处理（URL标准化）
 			for (Map<String, Object> map : setMap) {
-				String uri = appendFirstSlash(urlNormalize((String) map.get("request_uri")));
-				whitelist[index++] = uri != null ? uri.replaceAll("/$", "") : null;
+				String uri        = appendFirstSlash(urlNormalize((String) map.get("request_uri")));
+				String attackType = (String) map.get("attack_type");
+				whitelist[index] = uri != null ? uri.replaceAll("/$", "") : null;
+				whiteAttackType[index] = attackType;
+				index++;
 			}
 		}
 
@@ -159,6 +183,10 @@ public class RASPAppProperties extends RASPProperties {
 		return whitelist;
 	}
 
+	public String[] getWhiteAttackType() {
+		return whiteAttackType;
+	}
+
 	public List<Map<String, Object>> getPatchList() {
 		return patchList;
 	}
@@ -169,6 +197,14 @@ public class RASPAppProperties extends RASPProperties {
 
 	public int getServletStreamMaxCacheSize() {
 		return servletStreamMaxCacheSize;
+	}
+
+	public String[] getIpWhitelist() {
+		return ipWhitelist;
+	}
+
+	public boolean isDefenseVul() {
+		return defenseVul;
 	}
 
 }

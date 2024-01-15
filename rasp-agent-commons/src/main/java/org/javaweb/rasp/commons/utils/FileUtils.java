@@ -1,11 +1,12 @@
 package org.javaweb.rasp.commons.utils;
 
 import java.io.*;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.io.File.*;
-import static org.javaweb.rasp.commons.config.RASPConfiguration.RASP_DIRECTORY;
+import static org.javaweb.rasp.commons.config.RASPConfiguration.RASP_CACHE_DIRECTORY;
 import static org.javaweb.rasp.commons.utils.IOUtils.closeQuietly;
 import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 
@@ -49,7 +50,7 @@ public class FileUtils {
 	 * @return 空闲/总计数
 	 */
 	public static long[] getDiskInfo() {
-		return new long[]{RASP_DIRECTORY.getFreeSpace(), RASP_DIRECTORY.getTotalSpace()};
+		return new long[]{RASP_CACHE_DIRECTORY.getFreeSpace(), RASP_CACHE_DIRECTORY.getTotalSpace()};
 	}
 
 	/* A normal Unix pathname contains no duplicate slashes and does not end
@@ -354,7 +355,7 @@ public class FileUtils {
 	public static String readLine(File file, String encoding) throws IOException {
 		List<String> lines = readLines(file, encoding, 1);
 
-		if (lines.size() > 0) {
+		if (!lines.isEmpty()) {
 			return lines.get(0);
 		}
 
@@ -406,16 +407,78 @@ public class FileUtils {
 		}
 	}
 
-	public static void copyFile(File file, File dstFile) throws IOException {
+	public static void copyFile(File source, File dstFile) throws IOException {
 		File parentFile = dstFile.getParentFile();
 
 		// 解决复制的目标目录不存在时异常问题
 		if (!parentFile.exists()) {
-			if (!parentFile.mkdirs()) throw new IOException(AGENT_NAME + "无法创建目录：" + parentFile);
+			if (!parentFile.mkdirs()) {
+				throw new IOException(AGENT_NAME + "复制[" + source.getAbsolutePath() + "]文件失败，" +
+						"无法创建父级目录[" + parentFile.getAbsolutePath() + "]");
+			}
 		}
 
-		byte[] bytes = readFileBytes(file);
-		writeFileBytes(dstFile, bytes);
+		copyFileUsingChannels(source, dstFile);
+	}
+
+	public static void copyDirectory(File source, File destination) throws IOException {
+		copyDirectory(source, destination, null, true);
+	}
+
+	public static void copyDirectory(File source, File destination, boolean preserveFile) throws IOException {
+		copyDirectory(source, destination, null, preserveFile);
+	}
+
+	public static void copyDirectory(File source, File destination,
+	                                 FileFilter filter, boolean preserveFile) throws IOException {
+
+		if (source.isDirectory()) {
+			if (!destination.exists()) {
+				if (!destination.mkdir()) {
+					throw new IOException(AGENT_NAME + "无法创建目录[" + destination.getAbsolutePath() + "]");
+				}
+			}
+
+			File[] files = filter == null ? source.listFiles() : source.listFiles(filter);
+
+			if (files == null) return;
+
+			for (File file : files) {
+				String name     = file.getName();
+				File   srcFile  = new File(source, name);
+				File   destFile = new File(destination, name);
+
+				// 文件存在的情况下，如果设置了preserveFile，无需覆盖
+				if (destFile.exists() && preserveFile) {
+					return;
+				}
+
+				copyDirectory(srcFile, destFile, filter, preserveFile);
+			}
+		} else {
+			copyFileUsingChannels(source, destination);
+		}
+	}
+
+	public static void copyFileUsingChannels(File source, File destination) throws IOException {
+		FileInputStream  inputStream   = null;
+		FileOutputStream outputStream  = null;
+		FileChannel      sourceChannel = null;
+		FileChannel      destChannel   = null;
+
+		try {
+			inputStream = new FileInputStream(source);
+			outputStream = new FileOutputStream(destination);
+			sourceChannel = inputStream.getChannel();
+			destChannel = outputStream.getChannel();
+
+			destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+		} finally {
+			if (sourceChannel != null) closeQuietly(sourceChannel);
+			if (destChannel != null) closeQuietly(destChannel);
+			if (inputStream != null) closeQuietly(inputStream);
+			if (outputStream != null) closeQuietly(outputStream);
+		}
 	}
 
 	public static void writeStringToFile(File file, String content) throws IOException {

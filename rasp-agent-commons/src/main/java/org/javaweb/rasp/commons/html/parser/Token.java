@@ -426,7 +426,7 @@ public abstract class Token {
 
     final static class EOF extends Token {
         EOF() {
-            type = TokenType.EOF;
+            type = Token.TokenType.EOF;
         }
 
         @Override

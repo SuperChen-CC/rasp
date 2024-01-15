@@ -13,18 +13,15 @@
  */
 package org.javaweb.rasp.commons.slf4j.impl;
 
-import org.javaweb.rasp.commons.logback.core.status.StatusUtil;
-import org.javaweb.rasp.commons.slf4j.helpers.Util;
-import org.javaweb.rasp.commons.slf4j.ILoggerFactory;
-import org.javaweb.rasp.commons.slf4j.LoggerFactory;
-import org.javaweb.rasp.commons.slf4j.spi.LoggerFactoryBinder;
-
 import org.javaweb.rasp.commons.logback.classic.LoggerContext;
-import org.javaweb.rasp.commons.logback.classic.util.ContextInitializer;
 import org.javaweb.rasp.commons.logback.classic.util.ContextSelectorStaticBinder;
 import org.javaweb.rasp.commons.logback.core.CoreConstants;
-import org.javaweb.rasp.commons.logback.core.joran.spi.JoranException;
+import org.javaweb.rasp.commons.logback.core.status.StatusUtil;
 import org.javaweb.rasp.commons.logback.core.util.StatusPrinter;
+import org.javaweb.rasp.commons.slf4j.ILoggerFactory;
+import org.javaweb.rasp.commons.slf4j.LoggerFactory;
+import org.javaweb.rasp.commons.slf4j.helpers.Util;
+import org.javaweb.rasp.commons.slf4j.spi.LoggerFactoryBinder;
 
 /**
  * 
@@ -80,11 +77,11 @@ public class StaticLoggerBinder implements LoggerFactoryBinder {
      */
     void init() {
         try {
-            try {
-                new ContextInitializer(defaultLoggerContext).autoConfig();
-            } catch (JoranException je) {
-                Util.report("Failed to auto configure default logger context", je);
-            }
+//            try {
+//                new ContextInitializer(defaultLoggerContext).autoConfig();
+//            } catch (JoranException je) {
+//                Util.report("Failed to auto configure default logger context", je);
+//            }
             // logback-292
             if (!StatusUtil.contextHasStatusListener(defaultLoggerContext)) {
                 StatusPrinter.printInCaseOfErrorsOrWarnings(defaultLoggerContext);

@@ -49,7 +49,7 @@ public class ClassUtils {
 		return className != null ? className.replace("/", ".") : null;
 	}
 
-	public static String getDescriptor(final String desc) {
+	public static String getArgs(final String desc) {
 		if (desc == null) return null;
 
 		if (desc.contains("(") && desc.contains(")")) {
@@ -71,8 +71,8 @@ public class ClassUtils {
 		StringBuilder sb = new StringBuilder();
 
 		for (String name : classes) {
-			// 替换掉多余的空白符
-			name = name.replaceAll("\\s+", "");
+			// 替换掉多余的空白符、替换"."为"/"
+			name = toAsmClassName(name.replaceAll("\\s+", ""));
 
 			// 统计数组[]出现次数
 			int length = name.split("\\[]", -1).length;
@@ -200,6 +200,23 @@ public class ClassUtils {
 		return configMap;
 	}
 
+	public static Map<String, String> getFilePropertiesMap(File file) {
+		FileInputStream fis = null;
+
+		try {
+			Properties p = new Properties();
+			fis = new FileInputStream(file);
+
+			p.load(fis);
+			return propertiesToMap(p);
+		} catch (IOException ignored) {
+		} finally {
+			closeQuietly(fis);
+		}
+
+		return null;
+	}
+
 	/**
 	 * 读取指定jar中的Properties文件
 	 *
@@ -207,7 +224,7 @@ public class ClassUtils {
 	 * @param res     资源路径
 	 * @return Map
 	 */
-	public static Map<String, String> getPropertiesMap(File jarFile, String res) {
+	public static Map<String, String> getJarPropertiesMap(File jarFile, String res) {
 		FileInputStream fis = null;
 		JarInputStream  zis = null;
 

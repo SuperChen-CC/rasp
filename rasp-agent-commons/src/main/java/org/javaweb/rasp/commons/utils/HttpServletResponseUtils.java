@@ -10,8 +10,8 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.rasp.proxy.loader.RASPModuleType;
 
+import static org.javaweb.rasp.commons.log.RASPLogger.errorLog;
 import static org.javaweb.rasp.commons.utils.HttpServletRequestUtils.htmlSpecialChars;
-import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_LOGGER;
 import static org.javaweb.rasp.commons.utils.StringUtils.isNotEmpty;
 import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 
@@ -39,7 +39,7 @@ public class HttpServletResponseUtils {
 
 	public static void accessDenied(RASPServletRequestContext context, RASPAttackInfo attack, String text) {
 		String         attackHash = attack.getAttackHash();
-		RASPModuleType moduleType = attack.getRaspModuleType();
+		RASPModuleType moduleType = attack.getModuleType();
 
 		if (!context.isContextClosed() && isNotEmpty(text) && moduleType != null) {
 			HttpServletRequestProxy request     = context.getServletRequest();
@@ -97,7 +97,7 @@ public class HttpServletResponseUtils {
 				out.close();
 			}
 		} catch (Exception e) {
-			AGENT_LOGGER.error(AGENT_NAME + "返回信息[" + text + "]异常:" + e, e);
+			errorLog("返回信息[" + text + "]异常:", e);
 		}
 	}
 

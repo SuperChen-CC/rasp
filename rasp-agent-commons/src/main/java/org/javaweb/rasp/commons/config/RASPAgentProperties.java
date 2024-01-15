@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.javaweb.rasp.commons.constants.RASPConfigConstants.*;
 import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_PROTECTED_PACKAGE_REGEXP;
-import static org.javaweb.rasp.commons.constants.RASPConstants.JAVASSIST;
 
 public class RASPAgentProperties extends RASPProperties {
 
@@ -63,7 +62,7 @@ public class RASPAgentProperties extends RASPProperties {
 		);
 
 		this.displayVersion = configMap.getBoolean(DISPLAY_VERSION, true);
-		this.bytecodeEditor = configMap.getString(BYTECODE_EDITOR, JAVASSIST);
+		this.bytecodeEditor = configMap.getString(BYTECODE_EDITOR, "asm");
 		this.syncInterval = configMap.getInt(SYNC_INTERVAL, 30);
 		this.flushInterval = configMap.getInt(FLUSH_INTERVAL, 3);
 
@@ -78,7 +77,7 @@ public class RASPAgentProperties extends RASPProperties {
 		}
 
 		this.proxyIpHeader = configMap.getString(PROXY_IP_HEADER);
-		this.logLevel = configMap.getString(LOG_LEVEL);
+		this.logLevel = configMap.getString(LOG_LEVEL, "INFO");
 		this.version = configMap.getString(VERSION);
 		this.logBufferSize = configMap.getString(LOG_BUFFER_SIZE, DEFAULT_BUFFER_SIZE);
 

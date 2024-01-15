@@ -22,7 +22,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.System.nanoTime;
-import static org.javaweb.rasp.commons.config.RASPConfiguration.*;
+import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_PROPERTIES;
+import static org.javaweb.rasp.commons.config.RASPConfiguration.RASP_LOG_DIRECTORY;
 import static org.javaweb.rasp.commons.constants.RASPConstants.*;
 import static org.javaweb.rasp.commons.log.RASPLogger.*;
 import static org.javaweb.rasp.commons.logback.classic.Level.INFO;
@@ -30,7 +31,6 @@ import static org.javaweb.rasp.commons.sync.RASPLoggerSyncConfig.addRASPLogData;
 import static org.javaweb.rasp.commons.utils.ArrayUtils.arrayContains;
 import static org.javaweb.rasp.commons.utils.JsonUtils.toJson;
 import static org.javaweb.rasp.commons.utils.URLUtils.getStandardContextPath;
-import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
 
 public abstract class RASPContext implements Closeable {
 
@@ -43,6 +43,11 @@ public abstract class RASPContext implements Closeable {
 	 * 静默模式
 	 */
 	protected final boolean silent;
+
+	/**
+	 * 防御漏洞
+	 */
+	protected final boolean defenseVul;
 
 	/**
 	 * 模块防御状态
@@ -102,9 +107,9 @@ public abstract class RASPContext implements Closeable {
 	protected final RASPAppProperties appProperties;
 
 	/**
-	 * 记录当前context发生的攻击列表
+	 * 缓存RASP攻击日志
 	 */
-	protected final Set<RASPModuleType> raspAttackTypeList = new HashSet<RASPModuleType>();
+	protected final Set<RASPAttackInfo> attacks = new HashSet<RASPAttackInfo>();
 
 	public RASPContext(MethodHookEvent event) {
 		this(event, "/ROOT");
@@ -121,6 +126,7 @@ public abstract class RASPContext implements Closeable {
 		this.applicationConfig = RASPConfiguration.getApplicationConfig(this);
 		this.appProperties = applicationConfig.getRaspProperties();
 		this.silent = appProperties.isSilent();
+		this.defenseVul = appProperties.isDefenseVul();
 		this.moduleDefense = appProperties.isModuleDefense();
 	}
 
@@ -151,6 +157,8 @@ public abstract class RASPContext implements Closeable {
 	 */
 	public abstract boolean isWhitelist();
 
+	public abstract String[] getAttackTypeWhitelist();
+
 	public abstract void blockRequest(RASPAttackInfo attack);
 
 	/**
@@ -159,22 +167,30 @@ public abstract class RASPContext implements Closeable {
 	 * @param attack 攻击对象
 	 */
 	public void addAttackInfo(RASPAttackInfo attack) {
-		// 同一次请求中的同一个类型的攻击只记录一次
-		if (raspAttackTypeList.contains(attack.getRaspModuleType())) {
-			return;
+		// 阻断Http请求
+		if (!blockedRequest) {
+			blockRequest(attack);
 		}
 
-		try {
-			// 阻断Http请求
-			if (!blockedRequest) {
-				blockRequest(attack);
+		attacks.add(attack);
+	}
+
+	public void addAttackLog() {
+		for (RASPAttackInfo attack : attacks) {
+			try {
+				RASPAttackLog attackLog = createAttackLog(attack);
+
+				// 记录攻击请求
+				if (attackLog != null) {
+					Logger logger = initAttackLogger();
+
+					// 记录攻击日志
+					addRASPLogData(new RASPLogData(toJson(attackLog), logger, true));
+				}
+			} catch (Exception e) {
+				errorLog("写入攻击日志异常：", e);
 			}
-		} catch (Exception e) {
-			AGENT_LOGGER.error(AGENT_NAME + "阻断请求异常：" + e, e);
 		}
-
-		// 记录日志
-		addAttackLog(attack);
 	}
 
 	/**
@@ -199,7 +215,7 @@ public abstract class RASPContext implements Closeable {
 			File logDir = new File(RASP_LOG_DIRECTORY, contextName);
 
 			if (!logDir.exists() && !logDir.mkdirs()) {
-				AGENT_LOGGER.error("初始化{}日志对象失败，无法创建目录：{}", contextName, logDir);
+				errorLog("初始化{}日志对象失败，无法创建目录：{}", contextName, logDir);
 			}
 
 			return createRASPLogger(loggerName, new File(logDir, fileName), INFO, "%msg%n", fileSize);
@@ -227,6 +243,15 @@ public abstract class RASPContext implements Closeable {
 	}
 
 	/**
+	 * 是否防御RASP检测到的漏洞，默认不防御只记录日志
+	 *
+	 * @return 是否防御漏洞
+	 */
+	public boolean isDefenseVul() {
+		return defenseVul;
+	}
+
+	/**
 	 * 获取应用的上下文路径
 	 *
 	 * @return contextPath
@@ -249,8 +274,8 @@ public abstract class RASPContext implements Closeable {
 	 *
 	 * @return 攻击集合
 	 */
-	public Set<RASPModuleType> getRaspAttackTypeList() {
-		return raspAttackTypeList;
+	public Set<RASPAttackInfo> getAttacks() {
+		return attacks;
 	}
 
 	/**
@@ -267,10 +292,30 @@ public abstract class RASPContext implements Closeable {
 
 		// 检测是否是白名单URL
 		if (isWhitelist()) {
-			return false;
+			// 白名单攻击类型
+			String[] attackTypeWhitelist = getAttackTypeWhitelist();
+
+			if (attackTypeWhitelist.length == 0) {
+				return false;
+			}
+
+			// 判断白名单攻击类型
+			// 不处理指定类型的攻击
+			for (String type : attackTypeWhitelist) {
+				if (moduleType.getModuleName().equals(type)) {
+					return false;
+				}
+			}
 		}
 
 		RASPAppProperties appProperties = getAppProperties();
+
+		// 检查 IP 白名单
+		String[] ipWhitelist = appProperties.getIpWhitelist();
+
+		if (ipWhitelist.length > 0 && arrayContains(ipWhitelist, getRequestIP())) {
+			return false;
+		}
 
 		// 待检测的模块是否开启
 		if (!arrayContains(appProperties.getOpenModules(), moduleType.hashCode())) {
@@ -300,8 +345,14 @@ public abstract class RASPContext implements Closeable {
 	 * @return Context名称
 	 */
 	public String getContextName() {
-		if (contextName == null && getContextPath() != null) {
-			this.contextName = getContextPath().substring(1).replace("/", "_");
+		String ctxPath = getContextPath();
+
+		if (contextName == null && ctxPath != null) {
+			this.contextName = ctxPath.substring(1);
+
+			if (contextName.contains("/")) {
+				contextName = contextName.replace("/", "_");
+			}
 		}
 
 		return contextName;
@@ -342,28 +393,6 @@ public abstract class RASPContext implements Closeable {
 		initAttackLogger();
 	}
 
-	public void addAttackLog(RASPAttackInfo attack) {
-		if (attack == null) {
-			return;
-		}
-
-		try {
-			// 缓存攻击类型，防止重复记录
-			raspAttackTypeList.add(attack.getRaspModuleType());
-
-			Logger        logger    = initAttackLogger();
-			RASPAttackLog attackLog = createAttackLog(attack);
-
-			// 记录攻击请求
-			if (attackLog != null) {
-				// 记录攻击日志
-				addRASPLogData(new RASPLogData(toJson(attackLog), logger, true));
-			}
-		} catch (Exception e) {
-			AGENT_LOGGER.error(AGENT_NAME + "写入攻击日志异常：" + e, e);
-		}
-	}
-
 	public void addAccessLog() {
 		// 记录访问日志（必须开启Servlet输入流Hook）
 		if (appProperties.isServletStreamHook()) {
@@ -378,7 +407,7 @@ public abstract class RASPContext implements Closeable {
 					addRASPLogData(new RASPLogData(toJson(accessLog), accessLogger, false));
 				}
 			} catch (Exception e) {
-				AGENT_LOGGER.error(AGENT_NAME + "写入访问日志异常：" + e, e);
+				errorLog("写入访问日志异常：", e);
 			}
 		}
 	}
@@ -444,6 +473,14 @@ public abstract class RASPContext implements Closeable {
 
 	public RASPDataDecoder getRASPDecoder() {
 		return event.getDecoder();
+	}
+
+	public void addLogs() {
+		// 记录访问日志
+		addAccessLog();
+
+		// 记录攻击日志
+		addAttackLog();
 	}
 
 	public void close() {

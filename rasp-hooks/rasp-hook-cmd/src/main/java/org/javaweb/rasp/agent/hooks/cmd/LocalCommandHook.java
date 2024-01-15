@@ -13,7 +13,8 @@ import java.util.Map;
 
 import static org.javaweb.rasp.agent.hooks.cmd.handler.LocalCommandHookHandler.processCommand;
 import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_HOOK_RESULT;
-import static org.javaweb.rasp.commons.log.RASPLogger.moduleErrorLog;
+import static org.javaweb.rasp.commons.log.RASPLogger.errorLog;
+import static org.javaweb.rasp.commons.utils.ReflectionUtils.invokeFieldProxy;
 import static org.javaweb.rasp.commons.utils.ReflectionUtils.invokeFieldProxy;
 
 /**
@@ -55,7 +56,7 @@ public class LocalCommandHook implements RASPClassHook {
 				// 调用processCommand方法，检测执行的本地命令合法性
 				return processCommand(commandList, event);
 			} catch (Exception e) {
-				moduleErrorLog(CMD_TYPE, e);
+				errorLog(CMD_TYPE, e);
 			}
 
 			return DEFAULT_HOOK_RESULT;

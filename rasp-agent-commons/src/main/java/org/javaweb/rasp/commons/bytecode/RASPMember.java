@@ -2,7 +2,7 @@ package org.javaweb.rasp.commons.bytecode;
 
 import java.util.*;
 
-import static org.javaweb.rasp.commons.utils.ClassUtils.getDescriptor;
+import static org.javaweb.rasp.commons.utils.ClassUtils.getArgs;
 
 public class RASPMember {
 
@@ -80,9 +80,9 @@ public class RASPMember {
 		if (obj instanceof RASPMember) {
 			RASPMember member     = (RASPMember) obj;
 			String     memberName = member.getName();
-			String     memberDesc = getDescriptor(member.getDesc());
+			String     memberDesc = getArgs(member.getDesc());
 
-			desc = getDescriptor(desc);
+			desc = getArgs(desc);
 
 			if (!(name == null ? memberName == null : name.equals(memberName))) return false;
 

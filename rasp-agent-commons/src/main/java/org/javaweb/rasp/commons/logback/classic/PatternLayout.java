@@ -14,7 +14,6 @@
 package org.javaweb.rasp.commons.logback.classic;
 
 import org.javaweb.rasp.commons.logback.classic.pattern.*;
-import org.javaweb.rasp.commons.logback.classic.pattern.color.HighlightingCompositeConverter;
 import org.javaweb.rasp.commons.logback.classic.spi.ILoggingEvent;
 import org.javaweb.rasp.commons.logback.core.CoreConstants;
 import org.javaweb.rasp.commons.logback.core.pattern.PatternLayoutBase;
@@ -141,7 +140,7 @@ public class PatternLayout extends PatternLayoutBase<ILoggingEvent> {
         DEFAULT_CONVERTER_MAP.put("boldMagenta", BoldMagentaCompositeConverter.class.getName());
         DEFAULT_CONVERTER_MAP.put("boldCyan", BoldCyanCompositeConverter.class.getName());
         DEFAULT_CONVERTER_MAP.put("boldWhite", BoldWhiteCompositeConverter.class.getName());
-        DEFAULT_CONVERTER_MAP.put("highlight", HighlightingCompositeConverter.class.getName());
+//        DEFAULT_CONVERTER_MAP.put("highlight", HighlightingCompositeConverter.class.getName());
 
         DEFAULT_CONVERTER_MAP.put("lsn", LocalSequenceNumberConverter.class.getName());
         CONVERTER_CLASS_TO_KEY_MAP.put(LocalSequenceNumberConverter.class.getName(), "lsn");

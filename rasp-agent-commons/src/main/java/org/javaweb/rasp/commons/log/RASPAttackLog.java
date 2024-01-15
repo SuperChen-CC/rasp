@@ -41,14 +41,26 @@ public class RASPAttackLog implements Serializable {
 	@SerializedName("attack_values")
 	protected String[] attackValues;
 
+	@SerializedName("attack_code")
+	protected String attackCode;
+
 	@SerializedName("attack_position")
 	protected String attackPosition;
 
 	@SerializedName("attack_type")
 	protected String attackType;
 
+	/**
+	 * 日志类型：0=测试，1=警告，2=攻击，3=漏洞, 4=规则
+	 */
+	@SerializedName("alert_type")
+	protected int alertType;
+
 	@SerializedName("attack_hash")
 	protected String attackHash;
+
+	@SerializedName("desc")
+	protected String desc;
 
 	@SerializedName("hook_class_name")
 	protected String hookClassName;
@@ -76,10 +88,13 @@ public class RASPAttackLog implements Serializable {
 		boolean blockRequest = attack.isBlockRequest();
 		this.attackBlockRequest = (!blockRequest || !silent) && blockRequest;
 		this.attackParameter = checkMaxLength(attack.getParameter(), MAX_LENGTH);
+		this.attackCode = checkMaxLength(attack.getCode(), MAX_LENGTH);
 		this.attackValues = checkMaxLength(attack.getValues(), MAX_LENGTH);
 		this.attackPosition = attack.getPosition().name();
 		this.attackType = attack.getType();
+		this.alertType = attack.getAlertType();
 		this.attackHash = attack.getAttackHash();
+		this.desc = attack.getDesc();
 		this.hookTraceElements = attack.getTraceElements();
 	}
 

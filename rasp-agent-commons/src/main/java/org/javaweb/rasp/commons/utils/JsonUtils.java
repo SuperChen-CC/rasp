@@ -2,6 +2,7 @@ package org.javaweb.rasp.commons.utils;
 
 import org.javaweb.rasp.commons.gson.Gson;
 import org.javaweb.rasp.commons.gson.GsonBuilder;
+import org.javaweb.rasp.commons.gson.JsonSyntaxException;
 import org.javaweb.rasp.commons.gson.TypeAdapter;
 import org.javaweb.rasp.commons.gson.internal.LinkedTreeMap;
 import org.javaweb.rasp.commons.gson.reflect.TypeToken;
@@ -15,12 +16,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.javaweb.rasp.commons.log.RASPLogger.errorLog;
+
 /**
  * Created by yz on 2017/2/20.
  *
  * @author yz
  */
 public class JsonUtils {
+
+	private static final int MAX_LEN = 10000;
 
 	private static final JsonObjectTypeAdapter TYPE_ADAPTER = new JsonObjectTypeAdapter();
 
@@ -33,10 +38,18 @@ public class JsonUtils {
 		return GSON.toJson(src);
 	}
 
-	public static Map<String, Object> toJsonMap(String object) {
-		if (object != null) {
-			return GSON.fromJson(object, new TypeToken<Map<String, Object>>() {
-			}.getType());
+	public static Map<String, Object> toJsonMap(String jsonStr) {
+		if (jsonStr != null) {
+			Map<String, Object> map = null;
+
+			try {
+				map = GSON.fromJson(jsonStr, new TypeToken<Map<String, Object>>() {
+				}.getType());
+			} catch (JsonSyntaxException e) {
+				addErrorLog(jsonStr, e);
+			}
+
+			if (map != null) return map;
 		}
 
 		return new HashMap<String, Object>();
@@ -44,8 +57,15 @@ public class JsonUtils {
 
 	public static List<Map<String, Object>> toJsonList(String jsonStr) {
 		if (jsonStr != null) {
-			return GSON.fromJson(jsonStr, new TypeToken<List<Map<String, Object>>>() {
-			}.getType());
+			List<Map<String, Object>> list = null;
+			try {
+				list = GSON.fromJson(jsonStr, new TypeToken<List<Map<String, Object>>>() {
+				}.getType());
+			} catch (JsonSyntaxException e) {
+				addErrorLog(jsonStr, e);
+			}
+
+			if (list != null) return list;
 		}
 
 		return new ArrayList<Map<String, Object>>();
@@ -53,7 +73,11 @@ public class JsonUtils {
 
 	public static <T> T fromJson(String jsonStr, TypeToken<T> t) {
 		if (jsonStr != null) {
-			return GSON.fromJson(jsonStr, t.getType());
+			try {
+				return GSON.fromJson(jsonStr, t.getType());
+			} catch (JsonSyntaxException e) {
+				addErrorLog(jsonStr, e);
+			}
 		}
 
 		return null;
@@ -128,6 +152,12 @@ public class JsonUtils {
 			delegate.write(out, value);
 		}
 
+	}
+
+	private static void addErrorLog(String jsonStr, Exception e) {
+		if (jsonStr != null && jsonStr.length() > MAX_LEN) jsonStr = jsonStr.substring(0, MAX_LEN - 1);
+
+		errorLog("JSON：" + jsonStr + "解析失败，语法错误", e);
 	}
 
 }

@@ -39,7 +39,7 @@ import java.util.Locale;
 
 /**
  * This type adapter supports subclasses of date by defining a
- * {@link DateType} and then using its {@code createAdapterFactory}
+ * {@link DefaultDateTypeAdapter.DateType} and then using its {@code createAdapterFactory}
  * methods.
  *
  * @author Inderjeet Singh

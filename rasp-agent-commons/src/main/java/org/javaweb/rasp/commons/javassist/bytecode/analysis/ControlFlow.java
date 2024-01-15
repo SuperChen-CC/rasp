@@ -93,7 +93,7 @@ public class ControlFlow {
                 e.entrances[counters[e.index]++] = b;
             }
 
-            Catcher[] catchers = b.catchers();
+            ControlFlow.Catcher[] catchers = b.catchers();
             for (int k = 0; k < catchers.length; k++) {
                 Block catchBlock = catchers[k].node;
                 catchBlock.entrances[counters[catchBlock.index]++] = b;
@@ -324,7 +324,7 @@ public class ControlFlow {
          */
         public Catcher[] catchers() {
             List<Catcher> catchers = new ArrayList<Catcher>();
-            Catch c = toCatch;
+            BasicBlock.Catch c = toCatch;
             while (c != null) {
                 catchers.add(new Catcher(c));
                 c = c.next;

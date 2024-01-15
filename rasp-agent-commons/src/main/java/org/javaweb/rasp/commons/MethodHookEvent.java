@@ -65,6 +65,18 @@ public class MethodHookEvent {
 		return hookEvent.getHookHash();
 	}
 
+	public String getClassName() {
+		return hookEvent.getClassName();
+	}
+
+	public String getMethodName() {
+		return hookEvent.getMethodName();
+	}
+
+	public String getMethodDesc() {
+		return hookEvent.getMethodDesc();
+	}
+
 	public RASPContext getRASPContext() {
 		if (raspContext != null) {
 			return raspContext;
@@ -80,6 +92,10 @@ public class MethodHookEvent {
 	 */
 	public boolean hasRequest() {
 		return getRASPContext() != null;
+	}
+
+	public void cleanEvent() {
+		this.raspContext = null;
 	}
 
 }

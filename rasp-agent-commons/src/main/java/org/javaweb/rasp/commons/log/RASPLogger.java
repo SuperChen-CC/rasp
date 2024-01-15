@@ -9,17 +9,23 @@ import org.javaweb.rasp.commons.logback.classic.spi.ILoggingEvent;
 import org.javaweb.rasp.commons.logback.core.Appender;
 import org.javaweb.rasp.commons.logback.core.util.FileSize;
 import org.javaweb.rasp.commons.slf4j.LoggerFactory;
+import org.javaweb.rasp.commons.utils.EncryptUtils;
 import org.javaweb.rasp.loader.AgentConstants;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.rasp.proxy.loader.RASPModuleType;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import static java.lang.Long.MAX_VALUE;
-import static org.javaweb.rasp.commons.config.RASPConfiguration.MODULES_LOGGER;
+import static org.javaweb.rasp.commons.config.RASPConfiguration.ERROR_LOGGER;
 import static org.javaweb.rasp.commons.constants.RASPConstants.*;
+import static org.javaweb.rasp.loader.AgentConstants.AGENT_ERROR_SIGN;
 
 public class RASPLogger {
 
@@ -30,6 +36,8 @@ public class RASPLogger {
 				name, file, level, "%date %level [%thread] %logger{10} [%file:%line] %msg%n", null
 		);
 	}
+
+	private static final Set<String> EXCEPTION_LIST = new CopyOnWriteArraySet<String>();
 
 	public static Logger createRASPLogger(String name, File file, Level level, String pattern, String fileSize) {
 		// 设置日志格式
@@ -89,8 +97,9 @@ public class RASPLogger {
 	 * 刷新rasp-attack.log日志文件
 	 *
 	 * @param loggerPrefix logger前缀
+	 * @param splitFile    是否切割日志文件
 	 */
-	public static void rollover(String loggerPrefix) {
+	public static void rollover(String loggerPrefix, boolean splitFile) {
 		List<Logger> loggerList = LOGGER_CONTEXT.getLoggerList();
 
 		for (Logger logger : loggerList) {
@@ -104,7 +113,7 @@ public class RASPLogger {
 
 					if (e instanceof RASPFileAppender) {
 						RASPFileAppender<ILoggingEvent> appender = (RASPFileAppender<ILoggingEvent>) e;
-						appender.rollover();
+						appender.rollover(splitFile);
 						appender.start();
 					}
 				}
@@ -116,7 +125,7 @@ public class RASPLogger {
 		return LOGGER_CONTEXT.getLogger(name);
 	}
 
-	public static void moduleErrorLog(RASPModuleType type, Exception e, Object... args) {
+	public static void errorLog(RASPModuleType type, Exception e, Object... args) {
 		StringBuilder sb = new StringBuilder(AgentConstants.AGENT_NAME).append("检测").append(type.getModuleName());
 
 		if (args.length > 0) {
@@ -125,7 +134,7 @@ public class RASPLogger {
 
 		sb.append("异常：").append(e);
 
-		MODULES_LOGGER.error(sb.toString(), e);
+		errorLog(sb.toString(), e);
 	}
 
 	public static String createLoggerName(String prefix, String name) {
@@ -137,6 +146,8 @@ public class RASPLogger {
 			return ATTACK_LOG_FILE_NAME;
 		} else if (TRACE_LOG.equals(logType)) {
 			return TRACE_LOG_FILE_NAME;
+		} else if (ERROR_LOG.equals(logType)) {
+			return ERROR_LOG_FILE_NAME;
 		}
 
 		return ACCESS_LOG_FILE_NAME;
@@ -147,9 +158,39 @@ public class RASPLogger {
 			return ATTACK_LOGGER_PREFIX;
 		} else if (TRACE_LOG.equals(logType)) {
 			return TRACE_LOGGER_PREFIX;
+		} else if (ERROR_LOG.equals(logType)) {
+			return ERROR_LOGGER_PREFIX;
 		}
 
 		return ACCESS_LOGGER_PREFIX;
+	}
+
+	public static String getStackTraceAsString(Throwable throwable) {
+		if (throwable == null) return null;
+
+		StringWriter stringWriter = new StringWriter();
+		throwable.printStackTrace(new PrintWriter(stringWriter));
+		return stringWriter.toString();
+	}
+
+	public static void errorLog(String msg, Object... args) {
+		ERROR_LOGGER.error(AGENT_ERROR_SIGN + msg, args);
+	}
+
+	public static void errorLog(String msg, Throwable t) {
+		if (t == null) {
+			errorLog(msg);
+		}
+
+		String hashcode = EncryptUtils.md5(getStackTraceAsString(t));
+
+		// 如果多出出现同样的异常，那么不打印异常详情
+		if (EXCEPTION_LIST.contains(hashcode)) {
+			ERROR_LOGGER.error(AGENT_ERROR_SIGN + msg + " [" + t + "]");
+		} else {
+			ERROR_LOGGER.error(AGENT_ERROR_SIGN + msg, t);
+			EXCEPTION_LIST.add(hashcode);
+		}
 	}
 
 }

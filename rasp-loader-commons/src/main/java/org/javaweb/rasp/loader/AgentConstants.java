@@ -36,4 +36,9 @@ public class AgentConstants {
 	 */
 	public static final String AGENT_FILE_NAME = AGENT_FILE_PREFIX_NAME + "-agent.jar";
 
+	/**
+	 * 定义 Error Log 日志标头信息为 agent error
+	 */
+	public static final String AGENT_ERROR_SIGN = " [ " + AGENT_NAME + " AGENT ERROR ] ";
+
 }

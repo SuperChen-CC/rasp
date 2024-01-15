@@ -1,12 +1,14 @@
 package org.javaweb.rasp.commons.context;
 
 import org.javaweb.rasp.commons.MethodHookEvent;
+import org.javaweb.rasp.commons.config.RASPWhitelist;
+import org.javaweb.rasp.commons.utils.StringUtils;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.SocketChannel;
 
-import static org.javaweb.rasp.commons.config.RASPWhitelist.isWhitelistRequest;
+import static org.javaweb.rasp.commons.config.RASPWhitelist.getWhitelistIndexOfRequest;
 
 public abstract class RASPDefaultContext extends RASPContext {
 
@@ -34,6 +36,8 @@ public abstract class RASPDefaultContext extends RASPContext {
 	 * 是否是白名单
 	 */
 	protected boolean whitelist = true;
+
+	private String attackTypeWhitelist;
 
 	public RASPDefaultContext(MethodHookEvent event, String requestIP, String serverIP, int serverPort) {
 		super(event);
@@ -74,7 +78,9 @@ public abstract class RASPDefaultContext extends RASPContext {
 
 	public void initRequestPath(String requestPath) {
 		this.requestPath = requestPath;
-		this.whitelist = isWhitelistRequest(this);
+		int index = getWhitelistIndexOfRequest(this);
+		this.whitelist = index >= 0;
+		this.attackTypeWhitelist = RASPWhitelist.getAttackTypeWhitelist(this, index);
 	}
 
 	@Override
@@ -87,4 +93,11 @@ public abstract class RASPDefaultContext extends RASPContext {
 		return whitelist;
 	}
 
+	@Override
+	public String[] getAttackTypeWhitelist() {
+		if (StringUtils.isEmpty(attackTypeWhitelist)) {
+			return new String[0];
+		}
+		return attackTypeWhitelist.split(",");
+	}
 }

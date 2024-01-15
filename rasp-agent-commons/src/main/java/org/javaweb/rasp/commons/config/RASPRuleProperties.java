@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.javaweb.rasp.commons.constants.RASPRuleConstants.*;
-import static org.javaweb.rasp.commons.utils.ReflectionUtils.getMethodHashcode;
+import static org.javaweb.rasp.commons.utils.ReflectionUtils.getMethodDesc;
 
 public class RASPRuleProperties extends RASPProperties {
 
@@ -93,7 +93,7 @@ public class RASPRuleProperties extends RASPProperties {
 			String   methodName = strs.length == 2 ? strs[1].trim() : null;
 
 			// 计算类方法hash
-			reflectionDisabledMethods.add(getMethodHashcode(className, methodName).hashCode());
+			reflectionDisabledMethods.add(getMethodDesc(className, methodName).hashCode());
 		}
 	}
 

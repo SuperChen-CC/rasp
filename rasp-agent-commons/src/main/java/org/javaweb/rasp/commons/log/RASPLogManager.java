@@ -12,8 +12,7 @@ import java.util.Map;
 
 import static java.util.Collections.addAll;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.*;
-import static org.javaweb.rasp.commons.constants.RASPConstants.ATTACK_LOG;
-import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_ENCODING;
+import static org.javaweb.rasp.commons.constants.RASPConstants.*;
 import static org.javaweb.rasp.commons.log.RASPLogger.*;
 import static org.javaweb.rasp.commons.utils.EncryptUtils.deContent;
 import static org.javaweb.rasp.commons.utils.FileUtils.readLines;
@@ -34,50 +33,61 @@ public class RASPLogManager {
 	 * @param config Web应用配置
 	 * @return 日志文件
 	 */
-	public static List<File> getAppLogFiles(final String type, RASPPropertiesConfiguration<RASPAppProperties> config) {
-		final String     appName     = config.getConfigName();
-		final List<File> appLogFiles = new ArrayList<File>();
+	public static List<File> getLogFiles(final String type, RASPPropertiesConfiguration<RASPAppProperties> config) {
+		final String     appName      = config.getConfigName();
+		final List<File> appLogFiles  = new ArrayList<File>();
+		final String     loggerPrefix = getLoggerPrefix(type);
 
-		RASP_LOG_DIRECTORY.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File file) {
-				if (file.isDirectory() && file.getName().equals(appName)) {
-					File[] logFiles = getAppLogFiles(file, type);
-
-					if (logFiles != null) {
-						addAll(appLogFiles, logFiles);
-					}
-
-					return true;
+		if (ERROR_LOG.equals(type)) {
+			addAll(appLogFiles, getLogFiles(RASP_DATABASE_DIRECTORY, "error", type, false));
+		} else {
+			File[] files = RASP_LOG_DIRECTORY.listFiles(new FileFilter() {
+				@Override
+				public boolean accept(File file) {
+					return file.isDirectory() && file.getName().equals(appName);
 				}
+			});
 
-				return false;
+			if (files == null) {
+				return appLogFiles;
 			}
-		});
+
+			for (File file : files) {
+				String loggerName = createLoggerName(loggerPrefix, file.getName());
+				File[] logFiles   = getLogFiles(file, loggerName, type, true);
+
+				if (logFiles != null) {
+					addAll(appLogFiles, logFiles);
+				}
+			}
+		}
 
 		return appLogFiles;
 	}
 
-	public static File[] getAppLogFiles(File app, String logType) {
-		String loggerFileName = getLoggerFileName(logType);
-		File[] logs           = listAppLogFiles(app, loggerFileName);
+	public static File[] getLogFiles(File app, String loggerName, String logType, boolean splitFile) {
+		String fileName = getLoggerFileName(logType);
+		File[] logs     = listAppLogFiles(app, fileName);
 
 		if (logs == null || logs.length == 0) {
-			File   logFile      = new File(app, loggerFileName);
-			String loggerPrefix = getLoggerPrefix(logType);
-
-			// 如果日志文件不存在，或者日志文件有日志的情况需要刷新Logger文件
-			if (!logFile.exists() || logFile.length() > 0) {
-				String loggerName = createLoggerName(loggerPrefix, app.getName());
-
-				rollover(loggerName);
-
-				// 已刷新logger，重新再获取一次日志文件
-				logs = listAppLogFiles(app, loggerFileName);
-			}
+			return rolloverLog(app, fileName, loggerName, splitFile);
 		}
 
 		return logs;
+	}
+
+	private static File[] rolloverLog(File app, String fileName, String loggerName, boolean splitFile) {
+		File logFile = new File(app, fileName);
+
+		// 如果日志文件不存在，或者日志文件有日志的情况需要刷新Logger文件
+		if (!logFile.exists() || logFile.length() > 0) {
+			rollover(loggerName, splitFile);
+
+			// 已刷新logger，重新再获取一次日志文件
+			return listAppLogFiles(app, fileName);
+		}
+
+		return new File[0];
 	}
 
 	/**
@@ -143,7 +153,7 @@ public class RASPLogManager {
 			return logs;
 		} finally {
 			if (!logFile.delete()) {
-				MODULES_LOGGER.error("{}删除日志文件：{}异常!", AGENT_NAME, logFile);
+				errorLog("{}删除日志文件：{}异常!", AGENT_NAME, logFile);
 			}
 		}
 	}

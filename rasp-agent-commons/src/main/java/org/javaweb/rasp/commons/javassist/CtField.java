@@ -64,7 +64,7 @@ public class CtField extends CtMember {
      * @see CtClass#addField(CtField)
      * @see CtNewMethod#getter(String,CtField)
      * @see CtNewMethod#setter(String,CtField)
-     * @see Initializer
+     * @see CtField.Initializer
      */
     public CtField(CtClass type, String name, CtClass declaring)
         throws CannotCompileException
@@ -87,7 +87,7 @@ public class CtField extends CtMember {
      * @param declaring         the class to which the field will be added.
      * @see CtNewMethod#getter(String,CtField)
      * @see CtNewMethod#setter(String,CtField)
-     * @see Initializer
+     * @see CtField.Initializer
      */
     public CtField(CtField src, CtClass declaring)
         throws CannotCompileException
@@ -502,7 +502,7 @@ public class CtField extends CtMember {
      * must be used for the instantiation.  They create a new instance with
      * the given parameters and return it.
      *
-     * @see CtClass#addField(CtField, Initializer)
+     * @see CtClass#addField(CtField,CtField.Initializer)
      */
     public static abstract class Initializer {
         /**
@@ -639,8 +639,8 @@ public class CtField extends CtMember {
          *
          * @param objectType    the class instantiated for the initial value.
          *
-         * @see Initializer#byNewArray(CtClass,int)
-         * @see Initializer#byNewArray(CtClass,int[])
+         * @see CtField.Initializer#byNewArray(CtClass,int)
+         * @see CtField.Initializer#byNewArray(CtClass,int[])
          */
         public static Initializer byNewWithParams(CtClass objectType) {
             NewInitializer i = new NewInitializer();

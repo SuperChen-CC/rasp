@@ -42,7 +42,7 @@ public final class $Gson$Types {
    * Returns a new parameterized type, applying {@code typeArguments} to
    * {@code rawType} and enclosed by {@code ownerType}.
    *
-   * @return a {@link Serializable serializable} parameterized type.
+   * @return a {@link java.io.Serializable serializable} parameterized type.
    */
   public static ParameterizedType newParameterizedTypeWithOwner(
       Type ownerType, Type rawType, Type... typeArguments) {
@@ -53,7 +53,7 @@ public final class $Gson$Types {
    * Returns an array type whose elements are all instances of
    * {@code componentType}.
    *
-   * @return a {@link Serializable serializable} generic array type.
+   * @return a {@link java.io.Serializable serializable} generic array type.
    */
   public static GenericArrayType arrayOf(Type componentType) {
     return new GenericArrayTypeImpl(componentType);
@@ -93,7 +93,7 @@ public final class $Gson$Types {
   /**
    * Returns a type that is functionally equal but not necessarily equal
    * according to {@link Object#equals(Object) Object.equals()}. The returned
-   * type is {@link Serializable}.
+   * type is {@link java.io.Serializable}.
    */
   public static Type canonicalize(Type type) {
     if (type instanceof Class) {

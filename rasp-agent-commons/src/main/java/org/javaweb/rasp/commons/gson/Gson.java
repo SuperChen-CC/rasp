@@ -210,10 +210,10 @@ public final class Gson {
    *   by setting {@link GsonBuilder#serializeNulls()}.</li>
    *   <li>Gson provides default serialization and deserialization for Enums, {@link Map},
    *   {@link java.net.URL}, {@link java.net.URI}, {@link java.util.Locale}, {@link java.util.Date},
-   *   {@link BigDecimal}, and {@link BigInteger} classes. If you would prefer
+   *   {@link java.math.BigDecimal}, and {@link java.math.BigInteger} classes. If you would prefer
    *   to change the default representation, you can do so by registering a type adapter through
    *   {@link GsonBuilder#registerTypeAdapter(Type, Object)}. </li>
-   *   <li>The default Date format is same as {@link DateFormat#DEFAULT}. This format
+   *   <li>The default Date format is same as {@link java.text.DateFormat#DEFAULT}. This format
    *   ignores the millisecond portion of the date during serialization. You can change
    *   this by invoking {@link GsonBuilder#setDateFormat(int)} or
    *   {@link GsonBuilder#setDateFormat(String)}. </li>

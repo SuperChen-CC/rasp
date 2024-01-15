@@ -9,9 +9,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static java.rasp.proxy.loader.HookResultType.RETURN;
-import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_LOGGER;
 import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_STRING_ARRAY_RESULT;
-import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
+import static org.javaweb.rasp.commons.log.RASPLogger.errorLog;
 
 public class RASPParameterSet<E> extends HashSet<E> {
 
@@ -29,7 +28,7 @@ public class RASPParameterSet<E> extends HashSet<E> {
 				}
 			}
 		} catch (Exception e) {
-			AGENT_LOGGER.error(AGENT_NAME + "加载Http请求防御类：" + className + "异常：" + e, e);
+			errorLog("加载Http请求防御类：" + className + "异常：", e);
 		}
 	}
 

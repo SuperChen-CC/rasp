@@ -13,7 +13,7 @@ public class HookResult<T> {
 	/**
 	 * Hook结果处理方式
 	 */
-	private HookResultType hookResultType;
+	private int hookResultType;
 
 	/**
 	 * Hook抛出的异常,如果HookMethodType的值为THROW那么exception的值必须设置
@@ -30,22 +30,22 @@ public class HookResult<T> {
 	 */
 	private boolean forceReplace = false;
 
-	public HookResult(HookResultType handlerType) {
+	public HookResult(int handlerType) {
 		this.hookResultType = handlerType;
 	}
 
-	public HookResult(HookResultType handlerType, T returnValue) {
+	public HookResult(int handlerType, T returnValue) {
 		this.hookResultType = handlerType;
 		this.returnValue = returnValue;
 	}
 
-	public HookResult(HookResultType handlerType, T returnValue, boolean forceReplace) {
+	public HookResult(int handlerType, T returnValue, boolean forceReplace) {
 		this.hookResultType = handlerType;
 		this.returnValue = returnValue;
 		this.forceReplace = forceReplace;
 	}
 
-	public HookResult(HookResultType handlerType, RASPHookException exception) {
+	public HookResult(int handlerType, RASPHookException exception) {
 		this.hookResultType = handlerType;
 		this.exception = exception;
 	}
@@ -58,18 +58,18 @@ public class HookResult<T> {
 	 * @param returnValue  返回值
 	 * @param forceReplace 是否强制替换
 	 */
-	public HookResult(HookResultType handlerType, RASPHookException exception, T returnValue, boolean forceReplace) {
+	public HookResult(int handlerType, RASPHookException exception, T returnValue, boolean forceReplace) {
 		this.hookResultType = handlerType;
 		this.exception = exception;
 		this.returnValue = returnValue;
 		this.forceReplace = forceReplace;
 	}
 
-	public HookResultType getRASPHookResultType() {
+	public int getRASPHookResultType() {
 		return hookResultType;
 	}
 
-	public void setRASPHookResultType(HookResultType hookResultType) {
+	public void setRASPHookResultType(int hookResultType) {
 		this.hookResultType = hookResultType;
 	}
 

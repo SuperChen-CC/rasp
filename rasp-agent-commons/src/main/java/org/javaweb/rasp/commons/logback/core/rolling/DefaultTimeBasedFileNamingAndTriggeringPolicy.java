@@ -13,11 +13,10 @@
  */
 package org.javaweb.rasp.commons.logback.core.rolling;
 
+import org.javaweb.rasp.commons.logback.core.rolling.helper.TimeBasedArchiveRemover;
+
 import java.io.File;
 import java.util.Date;
-
-import org.javaweb.rasp.commons.logback.core.joran.spi.NoAutoStart;
-import org.javaweb.rasp.commons.logback.core.rolling.helper.TimeBasedArchiveRemover;
 
 /**
  * 
@@ -25,7 +24,6 @@ import org.javaweb.rasp.commons.logback.core.rolling.helper.TimeBasedArchiveRemo
  * 
  * @param <E>
  */
-@NoAutoStart
 public class DefaultTimeBasedFileNamingAndTriggeringPolicy<E> extends TimeBasedFileNamingAndTriggeringPolicyBase<E> {
 
     @Override

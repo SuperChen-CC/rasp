@@ -721,7 +721,7 @@ public class StackMapTable extends AttributeInfo {
      * @param ps    a print stream such as <code>System.out</code>.
      */
     public void println(java.io.PrintStream ps) {
-        Printer.print(this, new PrintWriter(ps, true));
+        Printer.print(this, new java.io.PrintWriter(ps, true));
     }
 
     static class Printer extends Walker {

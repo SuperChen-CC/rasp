@@ -1,8 +1,10 @@
 package org.javaweb.rasp.commons.context;
 
 import org.javaweb.rasp.commons.MethodHookEvent;
+import org.javaweb.rasp.commons.config.RASPWhitelist;
+import org.javaweb.rasp.commons.utils.StringUtils;
 
-import static org.javaweb.rasp.commons.config.RASPWhitelist.isWhitelistRequest;
+import static org.javaweb.rasp.commons.config.RASPWhitelist.getWhitelistIndexOfRequest;
 
 public abstract class RASPRequestContext extends RASPContext {
 
@@ -16,10 +18,17 @@ public abstract class RASPRequestContext extends RASPContext {
 	 */
 	private final boolean whitelist;
 
+	/**
+	 * 白名单攻击类型
+	 */
+	private final String attackTypeWhitelist;
+
 	public RASPRequestContext(MethodHookEvent event, String contextPath, String requestPath) {
 		super(event, contextPath);
 		this.requestPath = requestPath;
-		this.whitelist = isWhitelistRequest(this);
+		int index = getWhitelistIndexOfRequest(this);
+		this.whitelist = index >= 0;
+		this.attackTypeWhitelist = RASPWhitelist.getAttackTypeWhitelist(this, index);
 	}
 
 	/**
@@ -42,4 +51,14 @@ public abstract class RASPRequestContext extends RASPContext {
 		return whitelist;
 	}
 
+
+	/**
+	 * 获取白名单 攻击类型
+	 */
+	public String[] getAttackTypeWhitelist() {
+		if (StringUtils.isEmpty(attackTypeWhitelist)) {
+			return new String[0];
+		}
+		return attackTypeWhitelist.split(",");
+	}
 }

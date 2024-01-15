@@ -4,6 +4,7 @@ import org.javaweb.rasp.commons.attack.RASPPosition;
 import org.javaweb.rasp.commons.cache.RASPCachedParameter;
 import org.javaweb.rasp.commons.cache.RASPRequestCached;
 import org.javaweb.rasp.commons.context.RASPServletRequestContext;
+import org.javaweb.rasp.commons.lru.ConcurrentLinkedHashMap;
 import org.javaweb.rasp.commons.servlet.HttpServletRequestProxy;
 import org.javaweb.rasp.commons.servlet.HttpServletResponseProxy;
 import org.javaweb.rasp.commons.servlet.HttpSessionProxy;
@@ -12,12 +13,13 @@ import org.javaweb.rasp.commons.servlet.ServletContextProxy;
 import java.io.File;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.javaweb.rasp.commons.attack.RASPPosition.*;
-import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_LOGGER;
 import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_PROPERTIES;
-import static org.javaweb.rasp.commons.utils.IPV4Utils.*;
+import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_CACHE_COUNT;
+import static org.javaweb.rasp.commons.log.RASPLogger.errorLog;
+import static org.javaweb.rasp.commons.utils.IPV4Utils.textToNumericFormatV4;
+import static org.javaweb.rasp.commons.utils.IPV4Utils.textToNumericFormatV6;
 import static org.javaweb.rasp.commons.utils.StringUtils.checkMaxLength;
 import static org.javaweb.rasp.commons.utils.StringUtils.isNotEmpty;
 import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
@@ -36,7 +38,8 @@ public class HttpServletRequestUtils extends RASPRequestUtils {
 	/**
 	 * 缓存Web应用ContextPath
 	 */
-	private static final Map<Integer, File> DOCUMENT_ROOT_MAP = new ConcurrentHashMap<Integer, File>();
+	private static final Map<String, File> DOCUMENT_ROOT_MAP = new ConcurrentLinkedHashMap
+			.Builder<String, File>().maximumWeightedCapacity(DEFAULT_CACHE_COUNT).build();
 
 	public static ServletContextProxy getServletContext(HttpServletRequestProxy request) {
 		ServletContextProxy sc = request.getServletContext();
@@ -66,8 +69,7 @@ public class HttpServletRequestUtils extends RASPRequestUtils {
 	public static File getDocumentRootFile(RASPServletRequestContext context) {
 		String                  contextPath  = context.getContextPath();
 		HttpServletRequestProxy request      = context.getServletRequest();
-		int                     contextHash  = contextPath.hashCode();
-		File                    documentRoot = DOCUMENT_ROOT_MAP.get(contextHash);
+		File                    documentRoot = DOCUMENT_ROOT_MAP.get(contextPath);
 
 		if (documentRoot != null) {
 			return documentRoot;
@@ -76,7 +78,7 @@ public class HttpServletRequestUtils extends RASPRequestUtils {
 		String webRoot = request.getRealPath("/");
 
 		// 排除SpringBoot默认使用的/tmp/目录
-		if (webRoot != null && !"".equals(webRoot) && isTempDir(webRoot)) {
+		if (webRoot != null && !webRoot.isEmpty() && isTempDir(webRoot)) {
 			return new File(webRoot);
 		}
 
@@ -102,7 +104,7 @@ public class HttpServletRequestUtils extends RASPRequestUtils {
 		documentRoot = getWebRoot(request.getClass().getClassLoader());
 
 		// 缓存Web应用路径
-		DOCUMENT_ROOT_MAP.put(contextHash, documentRoot);
+		DOCUMENT_ROOT_MAP.put(contextPath, documentRoot);
 
 		return documentRoot;
 	}
@@ -260,7 +262,7 @@ public class HttpServletRequestUtils extends RASPRequestUtils {
 				logMap.put(key, values);
 			}
 		} catch (Exception e) {
-			AGENT_LOGGER.error("{}记录日志异常：{}", AGENT_NAME, e.toString());
+			errorLog("{}记录日志异常：{}", AGENT_NAME, e.toString());
 		}
 
 		return logMap;

@@ -1,21 +1,18 @@
 package org.javaweb.rasp.commons.context;
 
-import org.javaweb.rasp.commons.MethodHookEvent;
-import org.javaweb.rasp.commons.RASPAdapterClassLoader;
-import org.javaweb.rasp.commons.RASPAdapterInitialize;
-import org.javaweb.rasp.commons.RASPRequestFilter;
+import org.javaweb.rasp.commons.*;
 
 import java.net.URL;
 import java.rasp.proxy.loader.HookResult;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static java.rasp.proxy.loader.HookResultType.THROW;
-import static org.javaweb.rasp.commons.config.RASPConfiguration.AGENT_LOGGER;
-import static org.javaweb.rasp.commons.config.RASPConfiguration.MODULES_LOGGER;
+import static java.rasp.proxy.loader.HookResultType.RETURN;
+import static org.javaweb.rasp.commons.config.RASPConfiguration.*;
 import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_HOOK_RESULT;
+import static org.javaweb.rasp.commons.log.RASPLogger.errorLog;
 import static org.javaweb.rasp.commons.utils.Base64.decodeBase64Bytes;
-import static org.javaweb.rasp.loader.AgentConstants.AGENT_NAME;
+import static org.javaweb.rasp.loader.AgentConstants.*;
 
 public class RASPRequestContextManager {
 
@@ -44,13 +41,24 @@ public class RASPRequestContextManager {
 	}
 
 	/**
-	 * Http请求上下文
+	 * 缓存在当前线程中的RASPContext对象
 	 */
 	private static final ThreadLocal<RASPContext> RASP_CONTEXT = new InheritableThreadLocal<RASPContext>();
 
+	/**
+	 * RASP请求过滤器
+	 */
 	public static final List<RASPRequestFilter> REQUEST_FILTER = new CopyOnWriteArrayList<RASPRequestFilter>();
 
+	/**
+	 * RASP适配服务初始化
+	 */
 	public static final List<RASPAdapterInitialize> ADAPTER_INIT = new CopyOnWriteArrayList<RASPAdapterInitialize>();
+
+	/**
+	 * Web应用初始化
+	 */
+	public static final List<RASPAppInitialize> APP_INIT = new CopyOnWriteArrayList<RASPAppInitialize>();
 
 	/**
 	 * 获取当前线程中的Http请求上下文
@@ -67,18 +75,21 @@ public class RASPRequestContextManager {
 		}
 	}
 
+	public static void appInitialize(RASPContext context, MethodHookEvent event, ClassLoader classLoader) {
+		for (RASPAppInitialize initialize : APP_INIT) {
+			initialize.init(context, event, classLoader);
+		}
+	}
+
 	/**
 	 * 注入Adapter类到Web应用的类加载器中，因为通常request对应的类加载器是不变的，所以该操作仅需注入一次
 	 *
-	 * @param obj  请求对象
-	 * @param urls jar URL
+	 * @param classLoader 请求对象的类加载器
+	 * @param urls        jar URL
 	 * @return adapter loader
 	 */
-	public static RASPAdapterClassLoader createAdapterClassLoader(Object obj, URL... urls) {
-		Class<?>    objClass       = obj.getClass();
-		ClassLoader objClassLoader = objClass.getClassLoader();
-
-		RASPAdapterClassLoader adapterClassLoader = new RASPAdapterClassLoader(urls, objClassLoader);
+	public static RASPAdapterClassLoader createAdapterClassLoader(ClassLoader classLoader, URL... urls) {
+		RASPAdapterClassLoader adapterClassLoader = new RASPAdapterClassLoader(urls, classLoader);
 
 		// 创建RASPSyncThread类
 		String threadClassName = "org.javaweb.rasp.adapter.thread.RASPSyncThread";
@@ -112,23 +123,32 @@ public class RASPRequestContextManager {
 				}
 			}
 		} catch (Exception e) {
-			AGENT_LOGGER.error(AGENT_NAME + "加载Http请求防御类：" + className + "异常：" + e, e);
+			errorLog("加载Http请求防御类：" + className + "异常：", e);
 		}
 	}
 
 	public static synchronized void addAdapterInitialize(String className) {
+		addInitialize(className, RASPAdapterInitialize.class, ADAPTER_INIT);
+	}
+
+	public static synchronized void addAppInitialize(String className) {
+		addInitialize(className, RASPAppInitialize.class, APP_INIT);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static synchronized <T> void addInitialize(String className, Class<T> initClass, List<T> initList) {
 		try {
 			Class<?> clazz = Class.forName(className);
 
-			if (RASPAdapterInitialize.class.isAssignableFrom(clazz)) {
-				RASPAdapterInitialize filter = (RASPAdapterInitialize) clazz.newInstance();
+			if (initClass.isAssignableFrom(clazz)) {
+				T filter = (T) clazz.newInstance();
 
-				if (!ADAPTER_INIT.contains(filter)) {
-					ADAPTER_INIT.add(filter);
+				if (!initList.contains(filter)) {
+					initList.add(filter);
 				}
 			}
 		} catch (Exception e) {
-			AGENT_LOGGER.error(AGENT_NAME + " AdapterInitialize：" + className + "初始化异常：" + e, e);
+			errorLog(" AppInitialize：" + initClass + "初始化异常：", e);
 		}
 	}
 
@@ -151,18 +171,18 @@ public class RASPRequestContextManager {
 	 * @return Hook返回值
 	 */
 	public static HookResult<?> requestFilter(RASPContext context, MethodHookEvent event) {
-		try {
-			for (RASPRequestFilter module : REQUEST_FILTER) {
+		for (RASPRequestFilter module : REQUEST_FILTER) {
+			try {
 				// 调用安全模块的检测方法
 				HookResult<?> result = module.filter(context, event);
 
 				// 如果防御模块检测结果为THROW，需要终止程序执行
-				if (result.getRASPHookResultType() == THROW) {
+				if (result.getRASPHookResultType() != RETURN) {
 					return result;
 				}
+			} catch (Exception e) {
+				errorLog(" Http请求过滤模块[" + module.getClass() + "]加载异常:", e);
 			}
-		} catch (Exception e) {
-			MODULES_LOGGER.error(AGENT_NAME + "Http安全过滤模块加载异常:" + e, e);
 		}
 
 		return DEFAULT_HOOK_RESULT;
@@ -188,14 +208,21 @@ public class RASPRequestContextManager {
 			return;
 		}
 
+		// 移除RASP上下文
+		cleanContext(event, context);
+	}
+
+	public static void cleanContext(MethodHookEvent event, RASPContext context) {
 		try {
-			// 移除RASP上下文
 			if (AGENT_LOGGER.isDebugEnabled()) {
 				AGENT_LOGGER.debug("{}正在清除RASPContext，请求路径：{}", AGENT_NAME, context.getRequestPath());
 			}
 
-			// 记录访问日志
-			context.addAccessLog();
+			// 清除Hook Event
+			event.cleanEvent();
+
+			// 记录攻击和访问日志
+			context.addLogs();
 
 			// 释放context引用资源
 			context.close();

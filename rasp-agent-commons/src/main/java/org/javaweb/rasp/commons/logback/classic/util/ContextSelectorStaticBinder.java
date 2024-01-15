@@ -13,16 +13,15 @@
  */
 package org.javaweb.rasp.commons.logback.classic.util;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-
 import org.javaweb.rasp.commons.logback.classic.ClassicConstants;
 import org.javaweb.rasp.commons.logback.classic.LoggerContext;
-import org.javaweb.rasp.commons.logback.classic.selector.ContextJNDISelector;
 import org.javaweb.rasp.commons.logback.classic.selector.ContextSelector;
 import org.javaweb.rasp.commons.logback.classic.selector.DefaultContextSelector;
 import org.javaweb.rasp.commons.logback.core.util.Loader;
 import org.javaweb.rasp.commons.logback.core.util.OptionHelper;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Holds the context selector for use in the current environment.
@@ -62,9 +61,9 @@ public class ContextSelectorStaticBinder {
         String contextSelectorStr = OptionHelper.getSystemProperty(ClassicConstants.LOGBACK_CONTEXT_SELECTOR);
         if (contextSelectorStr == null) {
             contextSelector = new DefaultContextSelector(defaultLoggerContext);
-        } else if (contextSelectorStr.equals("JNDI")) {
+//        } else if (contextSelectorStr.equals("JNDI")) {
             // if jndi is specified, let's use the appropriate class
-            contextSelector = new ContextJNDISelector(defaultLoggerContext);
+//            contextSelector = new ContextJNDISelector(defaultLoggerContext);
         } else {
             contextSelector = dynamicalContextSelector(defaultLoggerContext, contextSelectorStr);
         }

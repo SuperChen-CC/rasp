@@ -130,7 +130,7 @@ public class RASPFileAppender<E> extends RASPOutputStreamAppender<E> {
 				// file should be opened only if collision free
 				try {
 					openFile(getFile());
-				} catch (IOException e) {
+				} catch (java.io.IOException e) {
 					errors++;
 					addError("openFile(" + fileName + "," + append + ") call failed.", e);
 				}
@@ -298,7 +298,7 @@ public class RASPFileAppender<E> extends RASPOutputStreamAppender<E> {
 		}
 	}
 
-	public synchronized void rollover() {
+	public synchronized void rollover(boolean splitFile) {
 		File file       = new File(getFile());
 		File parentFile = file.getParentFile();
 
@@ -327,25 +327,23 @@ public class RASPFileAppender<E> extends RASPOutputStreamAppender<E> {
 					throw new RolloverFailure("File [" + file + "] copy failed.");
 				}
 
-				// 切割日志文件
-				splitFile(targetFile);
+				if (splitFile) {
+					// 切割日志文件
+					splitFile(targetFile);
+				}
 			} finally {
 				start();
 			}
 		}
 	}
 
-	/**
-	 * 文件切割
-	 * @param targetFile
-	 */
 	private void splitFile(File targetFile) {
 		try {
 			if (targetFile.length() > fileSize) {
 				List<File> fileList = FileUtils.split(targetFile, fileSize);
 
 				// 如果切割了多个文件，直接删除切割之前的文件
-				if (fileList.size() > 0) {
+				if (!fileList.isEmpty()) {
 					if (!targetFile.delete()) {
 						throw new RolloverFailure("Cut file [" + targetFile + "] deletion failed.");
 					}

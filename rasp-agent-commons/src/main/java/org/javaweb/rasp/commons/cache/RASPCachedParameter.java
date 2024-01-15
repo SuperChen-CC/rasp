@@ -17,9 +17,7 @@ public class RASPCachedParameter {
 	private RASPPosition raspPosition;
 
 	public RASPCachedParameter(String key, String value, RASPPosition position) {
-		this.key = key != null ? key : "";
-		this.value = value != null ? new String[]{value} : new String[0];
-		this.raspPosition = position;
+		this(key, value != null ? new String[]{value} : new String[0], position);
 	}
 
 	public RASPCachedParameter(String key, String[] value, RASPPosition position) {

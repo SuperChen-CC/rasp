@@ -16,11 +16,11 @@ public class Characters {
 			throw new IndexOutOfBoundsException();
 		}
 
-		if (radix < Character.MIN_RADIX) {
+		if (radix < java.lang.Character.MIN_RADIX) {
 			throw new NumberFormatException("radix " + radix + " less than Character.MIN_RADIX");
 		}
 
-		if (radix > Character.MAX_RADIX) {
+		if (radix > java.lang.Character.MAX_RADIX) {
 			throw new NumberFormatException("radix " + radix + " greater than Character.MAX_RADIX");
 		}
 
@@ -53,7 +53,7 @@ public class Characters {
 
 			while (i < endIndex) {
 				// Accumulating negatively avoids surprises near MAX_VALUE
-				int digit = Character.digit(s.charAt(i), radix);
+				int digit = java.lang.Character.digit(s.charAt(i), radix);
 
 				if (digit < 0 || result < multmin) {
 					throw forCharSequence(s, beginIndex,
@@ -159,8 +159,8 @@ public class Characters {
 				dst[dp++] = (byte) c;
 				continue;
 			}
-			if (Character.isHighSurrogate(c) && i + 1 < len &&
-					Character.isLowSurrogate(StringUTF16.getChar(val, i + 1))) {
+			if (java.lang.Character.isHighSurrogate(c) && i + 1 < len &&
+					java.lang.Character.isLowSurrogate(StringUTF16.getChar(val, i + 1))) {
 				i++;
 			}
 			dst[dp++] = '?';

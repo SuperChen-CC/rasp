@@ -95,9 +95,10 @@ public class RASPHttpRequest implements HttpServletRequestProxy {
 	@Override
 	public String getHeader(String name) {
 		if (requestInfo != null) {
-			if ("x-forwarded-for".equals(name)) {
-				return (String) requestInfo[X_FORWARDED_FOR];
-			} else if ("User-Agent".equals(name)) {
+//			if ("x-forwarded-for".equals(name)) {
+//				return (String) requestInfo[X_FORWARDED_FOR];
+//			} else
+			if ("User-Agent".equals(name)) {
 				return (String) requestInfo[USER_AGENT];
 			}
 		}
@@ -234,10 +235,6 @@ public class RASPHttpRequest implements HttpServletRequestProxy {
 
 	@Override
 	public String getRemoteAddr() {
-		if (requestInfo != null) {
-			return (String) requestInfo[REMOTE_ADDR];
-		}
-
 		return invokeProxyMethod(request, "getRemoteAddr");
 	}
 

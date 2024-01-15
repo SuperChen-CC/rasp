@@ -33,6 +33,11 @@ public class RASPAppConstants {
 	public static final String SILENT = "silent";
 
 	/**
+	 * 是否防御RASP检测到的漏洞，默认不防御只记录日志
+	 */
+	public static final String DEFENSE_AGAINST_VUL = "defense_against_vul";
+
+	/**
 	 * IP黑名单列表
 	 */
 	public static final String IP_BLACKLIST = "ip.blacklist";
@@ -41,6 +46,11 @@ public class RASPAppConstants {
 	 * URL黑名单列表
 	 */
 	public static final String URL_BLACKLIST = "url.blacklist";
+
+	/**
+	 * IP白名单列表
+	 */
+	public static final String IP_WHITELIST = "ip.whitelist";
 
 	/**
 	 * 请求头白名单

@@ -1532,7 +1532,7 @@ public class Element extends Node {
     /**
      * Get all of the element's class names. E.g. on element {@code <div class="header gray">},
      * returns a set of two elements {@code "header", "gray"}. Note that modifications to this set are not pushed to
-     * the backing {@code class} attribute; use the {@link #classNames(Set)} method to persist them.
+     * the backing {@code class} attribute; use the {@link #classNames(java.util.Set)} method to persist them.
      * @return set of classnames, empty if no class attribute
      */
     public Set<String> classNames() {

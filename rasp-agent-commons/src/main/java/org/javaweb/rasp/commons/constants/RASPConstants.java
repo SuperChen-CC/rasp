@@ -31,6 +31,11 @@ public class RASPConstants {
 	public static final String TRACE_LOGGER_PREFIX = "trace_log_";
 
 	/**
+	 * 错误日志前缀
+	 */
+	public static final String ERROR_LOGGER_PREFIX = "error_log_";
+
+	/**
 	 * 访问日志
 	 */
 	public static final String ACCESS_LOG = "access";
@@ -46,9 +51,14 @@ public class RASPConstants {
 	public static final String TRACE_LOG = "trace";
 
 	/**
+	 * 错误日志
+	 */
+	public static final String ERROR_LOG = "error";
+
+	/**
 	 * RASP需要同步的日志类型
 	 */
-	public static final String[] SYNC_LOG_TYPES = new String[]{ACCESS_LOG, ATTACK_LOG, TRACE_LOG};
+	public static final String[] SYNC_LOG_TYPES = new String[]{ACCESS_LOG, ATTACK_LOG, TRACE_LOG, ERROR_LOG};
 
 	/**
 	 * RASP 请求适配jar名称
@@ -69,6 +79,11 @@ public class RASPConstants {
 	 * RASP Runtime日志文件名
 	 */
 	public static final String AGENT_LOG_FILE_NAME = AGENT_FILE_PREFIX_NAME + "-agent.log";
+
+	/**
+	 * RASP ERROR日志文件名
+	 */
+	public static final String ERROR_LOG_FILE_NAME = AGENT_FILE_PREFIX_NAME + "-error.log";
 
 	/**
 	 * RASP 防御模块日志文件名
@@ -145,8 +160,8 @@ public class RASPConstants {
 	 */
 	public static final HookResult<?> DEFAULT_HOOK_RESULT = new HookResult<Object>(RETURN);
 
-	public static final HookResult<Map<String, String[]>> DEFAULT_MAP_RESULT =
-			new HookResult<Map<String, String[]>>(RETURN);
+	public static final HookResult<Map<String, Object>> DEFAULT_MAP_RESULT =
+			new HookResult<Map<String, Object>>(RETURN);
 
 	public static final HookResult<String> DEFAULT_STRING_RESULT = new HookResult<String>(RETURN);
 
@@ -201,5 +216,10 @@ public class RASPConstants {
 	 * xml类型Content-Type
 	 */
 	public static final String APPLICATION_XML_VALUE = "application/xml";
+
+	/**
+	 * 默认缓存最大存储的对象数
+	 */
+	public static final int DEFAULT_CACHE_COUNT = 10000;
 
 }
