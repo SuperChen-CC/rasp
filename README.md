@@ -118,8 +118,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.javaweb.rasp.agent.hooks.cmd.handler.LocalCommandHookHandler.processCommand;
-import static org.javaweb.rasp.commons.RASPLogger.moduleErrorLog;
 import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_HOOK_RESULT;
+import static org.javaweb.rasp.commons.log.RASPLogger.errorLog;
+import static org.javaweb.rasp.commons.utils.ReflectionUtils.invokeFieldProxy;
 import static org.javaweb.rasp.commons.utils.ReflectionUtils.invokeFieldProxy;
 
 /**
@@ -161,7 +162,7 @@ public class LocalCommandHook implements RASPClassHook {
 				// 调用processCommand方法，检测执行的本地命令合法性
 				return processCommand(commandList, event);
 			} catch (Exception e) {
-				moduleErrorLog(CMD_TYPE, e);
+				errorLog(CMD_TYPE, e);
 			}
 
 			return DEFAULT_HOOK_RESULT;
@@ -182,7 +183,11 @@ public class LocalCommandHook implements RASPClassHook {
 
 ```java
 // 添加攻击日志记录
-context.addAttackInfo(new RASPAttackInfo(cmdType, key, commands, position, event, true));
+context.addAttackInfo(new RASPAttackInfo.Builder()
+        .bindParameters(key, values, cmd, true)
+        .bindType(position, CMD_TYPE, RULES)
+        .build()
+);
 
 return BLOCK_RESULT;
 ```
@@ -194,10 +199,10 @@ package org.javaweb.rasp.agent.hooks.cmd.handler;
 
 import org.javaweb.rasp.commons.MethodHookEvent;
 import org.javaweb.rasp.commons.attack.RASPAttackInfo;
-import org.javaweb.rasp.commons.attack.RASPParameterPosition;
+import org.javaweb.rasp.commons.attack.RASPPosition;
 import org.javaweb.rasp.commons.cache.RASPCachedParameter;
-import org.javaweb.rasp.commons.cache.RASPCachedRequest;
-import org.javaweb.rasp.commons.context.RASPHttpRequestContext;
+import org.javaweb.rasp.commons.cache.RASPRequestCached;
+import org.javaweb.rasp.commons.context.RASPContext;
 import org.javaweb.rasp.commons.utils.StringUtils;
 
 import java.rasp.proxy.loader.HookResult;
@@ -207,6 +212,7 @@ import java.util.Set;
 
 import static java.rasp.proxy.loader.HookResultType.THROW;
 import static org.javaweb.rasp.agent.hooks.cmd.LocalCommandHook.CMD_TYPE;
+import static org.javaweb.rasp.commons.attack.RASPAlertType.RULES;
 import static org.javaweb.rasp.commons.constants.RASPConstants.DEFAULT_HOOK_RESULT;
 
 /**
@@ -230,8 +236,8 @@ public class LocalCommandHookHandler {
 
 		// 如果当前线程中不包含HTTP请求则不需要检测
 		if (event.hasRequest()) {
-			RASPHttpRequestContext context       = event.getRASPContext();
-			RASPCachedRequest      cachedRequest = context.getCachedRequest();
+			RASPContext       context       = event.getRASPContext();
+			RASPRequestCached cachedRequest = context.getCachedRequest();
 
 			// 检测当前请求是否需要经过安全模块检测和过滤且该模块是否是开启状态
 			if (!context.mustFilter(CMD_TYPE)) {
@@ -249,7 +255,7 @@ public class LocalCommandHookHandler {
 				String[] values = parameterValue.getValue();
 
 				// 请求参数出现的位置
-				RASPParameterPosition position = parameterValue.getRaspAttackPosition();
+				RASPPosition position = parameterValue.getRaspAttackPosition();
 
 				// 遍历所有的参数值
 				for (String value : values) {
@@ -261,7 +267,11 @@ public class LocalCommandHookHandler {
 					for (String cmd : commands) {
 						if (value.equals(cmd)) {
 							// 添加攻击日志记录
-							context.addAttackInfo(new RASPAttackInfo(CMD_TYPE, key, commands, position, event, true));
+							context.addAttackInfo(new RASPAttackInfo.Builder()
+									.bindParameters(key, values, cmd, true)
+									.bindType(position, CMD_TYPE, RULES)
+									.build()
+							);
 
 							return BLOCK_RESULT;
 						}
